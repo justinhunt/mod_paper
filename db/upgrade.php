@@ -1,0 +1,94 @@
+<?php
+/**
+ * Upgrade script for mod_paper
+ *
+ * @package    mod_paper
+ * @copyright  2024 Your Name
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+function xmldb_paper_upgrade($oldversion) {
+    global $DB;
+    $dbman = $DB->get_manager();
+
+    if ($oldversion < 2024041701) {
+
+        // Define field targetlanguagefont to be added to paper.
+        $table = new xmldb_table('paper');
+        $field = new xmldb_field('targetlanguagefont', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, 'courier', 'targetlanguage');
+
+        // Conditionally launch add field targetlanguagefont.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field feedbacklanguagefont to be added to paper.
+        $field2 = new xmldb_field('feedbacklanguagefont', XMLDB_TYPE_CHAR, '50', null, XMLDB_NOTNULL, null, 'freesans', 'feedbacklanguage');
+
+        // Conditionally launch add field feedbacklanguagefont.
+        if (!$dbman->field_exists($table, $field2)) {
+            $dbman->add_field($table, $field2);
+        }
+
+        // Paper savepoint reached.
+        upgrade_mod_savepoint(true, 2024041701, 'paper');
+    }
+
+    if ($oldversion < 2024042600) {
+
+        // Define table paper_grading_presets to be created.
+        $table = new xmldb_table('paper_grading_presets');
+
+        // Adding fields to table paper_grading_presets.
+        $table->add_field('id', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, XMLDB_SEQUENCE, null);
+        $table->add_field('userid', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('name', XMLDB_TYPE_CHAR, '255', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('content', XMLDB_TYPE_TEXT, null, null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timecreated', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+        $table->add_field('timemodified', XMLDB_TYPE_INTEGER, '10', null, XMLDB_NOTNULL, null, null);
+
+        // Adding keys to table paper_grading_presets.
+        $table->add_key('primary', XMLDB_KEY_PRIMARY, ['id']);
+
+        // Adding indexes to table paper_grading_presets.
+        $table->add_index('userid', XMLDB_INDEX_NOTUNIQUE, ['userid']);
+
+        // Conditionally launch create table for paper_grading_presets.
+        if (!$dbman->table_exists($table)) {
+            $dbman->create_table($table);
+        }
+
+        // Paper savepoint reached.
+        upgrade_mod_savepoint(true, 2024042600, 'paper');
+    }
+
+    if ($oldversion < 2024042700) {
+
+        // Define field feedbackmode to be added to paper_response_areas.
+        $table = new xmldb_table('paper_response_areas');
+        $field = new xmldb_field('feedbackmode', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'none', 'feedbackoverall');
+
+        // Conditionally launch add field feedbackmode.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Paper savepoint reached.
+        upgrade_mod_savepoint(true, 2024042700, 'paper');
+    }
+
+    if ($oldversion < 2024042701) {
+        $table = new xmldb_table('paper');
+        $field = new xmldb_field('showtotalscore', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1', 'timemodified');
+
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        upgrade_mod_savepoint(true, 2024042701, 'paper');
+    }
+
+    return true;
+}

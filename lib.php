@@ -1,0 +1,189 @@
+<?php
+/**
+ * Library of functions for module paper
+ *
+ * @package    mod_paper
+ * @copyright  2024 Your Name
+ * @license    http://www.gnu.org/copyleft/gpl.html GNU GPL v3 or later
+ */
+
+defined('MOODLE_INTERNAL') || die();
+
+/**
+ * Standard Moodle plugin API: Add instance
+ */
+function paper_add_instance($paper, $mform = null) {
+    global $DB;
+
+    $paper->timecreated = time();
+    $paper->timemodified = $paper->timecreated;
+
+    $paper->id = $DB->insert_record('paper', $paper);
+
+    paper_grade_item_update($paper);
+
+    return $paper->id;
+}
+
+/**
+ * Standard Moodle plugin API: Update instance
+ */
+function paper_update_instance($paper, $mform = null) {
+    global $DB;
+
+    $paper->timemodified = time();
+    $paper->id = $paper->instance;
+
+    $DB->update_record('paper', $paper);
+
+    $paper = $DB->get_record('paper', ['id' => $paper->id]);
+    paper_grade_item_update($paper);
+
+    return true;
+}
+
+/**
+ * Standard Moodle plugin API: Delete instance
+ */
+function paper_delete_instance($id) {
+    global $DB;
+
+    if (!$paper = $DB->get_record('paper', ['id' => $id])) {
+        return false;
+    }
+
+    // Delete items
+    $evaluations = $DB->get_records('paper_evaluations', ['paperid' => $id]);
+    foreach ($evaluations as $eval) {
+        $DB->delete_records('paper_eval_items', ['evalid' => $eval->id]);
+    }
+
+    // Delete evaluations and response areas
+    $DB->delete_records('paper_evaluations', ['paperid' => $id]);
+    $DB->delete_records('paper_response_areas', ['paperid' => $id]);
+
+    // Finally delete paper instance
+    $DB->delete_records('paper', ['id' => $id]);
+
+    paper_grade_item_delete($paper);
+
+    return true;
+}
+
+/**
+ * Define module features
+ */
+function paper_supports($feature) {
+    switch ($feature) {
+        case FEATURE_GROUPS:                  return true;
+        case FEATURE_GROUPINGS:               return true;
+        case FEATURE_MOD_INTRO:               return true;
+        case FEATURE_COMPLETION_TRACKS_VIEWS: return true;
+        case FEATURE_COMPLETION_HAS_RULES:    return true;
+        case FEATURE_GRADE_HAS_GRADE:         return true;
+        case FEATURE_GRADE_OUTCOMES:          return true;
+        case FEATURE_BACKUP_MOODLE2:          return true;
+        case FEATURE_SHOW_DESCRIPTION:        return true;
+        default: return null;
+    }
+}
+
+/**
+ * Create/update grade item
+ */
+function paper_grade_item_update($paper, $grades = null) {
+    global $CFG;
+    require_once($CFG->libdir.'/gradelib.php');
+
+    $params = [
+        'itemname' => $paper->name,
+        'idnumber' => $paper->course,
+        'gradetype' => GRADE_TYPE_VALUE,
+        'grademax' => $paper->grade,
+        'grademin' => 0
+    ];
+
+    if ($grades === 'reset') {
+        $params['reset'] = true;
+        $grades = null;
+    }
+
+    return grade_update('mod/paper', $paper->course, 'mod', 'paper', $paper->id, 0, $grades, $params);
+}
+
+/**
+ * Delete grade item
+ */
+function paper_grade_item_delete($paper) {
+    global $CFG;
+    require_once($CFG->libdir.'/gradelib.php');
+
+    return grade_update('mod/paper', $paper->course, 'mod', 'paper', $paper->id, 0, null, ['deleted' => 1]);
+}
+
+/**
+ * Handle dynamic file serving via pluginfile hook
+ */
+function paper_pluginfile($course, $cm, $context, $filearea, array $args, $forcedownload, array $options = []) {
+    global $DB;
+
+    if ($context->contextlevel != CONTEXT_MODULE) {
+        send_file_not_found();
+    }
+
+    if ($filearea === 'downloadevaluations') {
+        require_login($course, false, $cm);
+        require_capability('mod/paper:manage', $context);
+        
+        $paper = $DB->get_record('paper', ['id' => $cm->instance], '*', MUST_EXIST);
+        
+        $evalid = (int) array_shift($args);
+        if ($evalid > 0) {
+            $evaluations = $DB->get_records('paper_evaluations', ['id' => $evalid]);
+            $filename = 'evaluation_' . $evalid . '.pdf';
+        } else {
+            $evaluations = $DB->get_records('paper_evaluations', ['paperid' => $paper->id]);
+            $filename = 'evaluations_' . $paper->id . '.pdf';
+        }
+        
+        if (empty($evaluations)) {
+            send_file_not_found();
+        }
+        
+        $pdfprocessor = new \mod_paper\pdf_processor();
+        $pdf_binary = $pdfprocessor->generate_evaluations_pdf($paper, $evaluations, $context);
+        
+        send_file($pdf_binary, $filename, 0, 0, true, false, 'application/pdf');
+        return;
+    }
+
+    // Default handling for other files (like template or snippets)
+    $fs = get_file_storage();
+    
+    if ($filearea === 'responsesnippet') {
+        $itemid = (int) array_shift($args);
+        $filename = array_shift($args);
+        $file = $fs->get_file($context->id, 'mod_paper', 'responsesnippet', $itemid, '/', $filename);
+        if (!$file) {
+            send_file_not_found();
+        }
+        send_stored_file($file, 0, 0, true);
+        return;
+    }
+
+    $itemid = (int) array_shift($args);
+    if (empty($args)) {
+        $filepath = '/';
+        $filename = '.';
+    } else {
+        $filename = array_pop($args);
+        $filepath = empty($args) ? '/' : '/' . implode('/', $args) . '/';
+    }
+    
+    $file = $fs->get_file($context->id, 'mod_paper', $filearea, $itemid, $filepath, $filename);
+    if (!$file || $file->is_directory()) {
+        send_file_not_found();
+    }
+    
+    send_stored_file($file, 0, 0, $forcedownload, $options);
+}
