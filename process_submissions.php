@@ -76,7 +76,9 @@ file_prepare_draft_area($draftitemid, $context->id, 'mod_paper', 'submissions', 
 $mform->set_data(['submissions_filemanager' => $draftitemid]);
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading("Upload Submissions");
+echo $OUTPUT->heading(get_string('uploadscansfor', 'mod_paper', format_string($paper->name)));
+
+echo $OUTPUT->box(get_string('process_submissions_help', 'mod_paper'), 'info mb-3');
 
 $mform->display();
 

@@ -3,14 +3,14 @@
     <div class="row">
         <div class="col-md-12">
             <div class="alert alert-info">
-                Please upload an image of a blank paper to identify response areas. Response areas should be identifiable by having a clear border around them, and contain no text.
+                {{#str}}uploadtemplate_help, mod_paper{{/str}}
             </div>
             <form method="post" action="{{actionurl}}" enctype="multipart/form-data">
                 <div class="form-group">
-                    <label for="templateimage">Template File (JPG/PNG/PDF)</label>
+                    <label for="templateimage">{{#str}}templatefile, mod_paper{{/str}}</label>
                     <input type="file" class="form-control-file" id="templateimage" name="templateimage" required accept="image/jpeg,image/png,application/pdf">
                 </div>
-                <button type="submit" class="btn btn-primary">Analyze Image</button>
+                <button type="submit" class="btn btn-primary">{{#str}}analyzeimage, mod_paper{{/str}}</button>
             </form>
         </div>
     </div>
@@ -19,7 +19,7 @@
     {{#hastemplate}}
     <div class="row">
         <div class="col-md-6">
-            <h3>Identified Areas</h3>
+            <h3>{{#str}}identifiedareas, mod_paper{{/str}}</h3>
             <div class="d-flex align-items-center justify-content-between mb-2">
                 <div id="status-icons-container" class="d-flex flex-wrap" style="gap: 10px; font-size: 1.2rem;">
                     <!-- Status icons will be rendered here by JS -->
@@ -27,318 +27,201 @@
                 <div id="status-summary-label" style="font-size: 1.2rem; font-weight: bold;"></div>
             </div>
             <div id="image-container" style="position: relative; width: 100%; border: 1px solid #ccc;">
-                <!-- the image with bounding boxes overlaid would go here in Javascript -->
-                <p>Template loaded. (Visual bounding boxes UI to be implemented in amd module).</p>
+                {{#imageurl}}
+                <img src="{{imageurl}}" style="width: 100%; height: auto; display: block;">
+                {{/imageurl}}
+                {{^imageurl}}
+                <p>{{#str}}templateloaded, mod_paper{{/str}}</p>
+                {{/imageurl}}
             </div>
-            <a href="{{actionurl}}&amp;reset=1" class="btn btn-warning mt-3">Upload New Template</a>
+            <input type="hidden" id="responseareas-json" value="{{responseareas_json}}">
+            <input type="hidden" id="preset-contents-json" value="{{preset_contents_json}}">
+            <a href="{{actionurl}}&amp;reset=1" class="btn btn-warning mt-3">{{#str}}uploadnewtemplate, mod_paper{{/str}}</a>
         </div>
         <div class="col-md-6">
             <div class="d-flex justify-content-between align-items-center mb-3">
-                <h3 class="mb-0">Response Area Configuration</h3>
-                <button type="button" class="btn btn-primary btn-sm" id="btn-add-area">
-                    <i class="fa fa-plus"></i> Add Area
+                <h3 class="mb-0">{{#str}}responseareaconfiguration, mod_paper{{/str}}</h3>
+                <button type="button" class="btn btn-primary btn-sm" id="add-area-btn">
+                    <i class="fa fa-plus"></i> {{#str}}addarea, mod_paper{{/str}}
                 </button>
             </div>
             <form id="setup-form" method="post" action="{{actionurl}}">
                 <input type="hidden" name="sesskey" value="{{sesskey}}">
-                {{#responseareas}}
+                <div id="areas-container">
+                    {{#responseareas}}
                 <div class="card mb-2 area-card" data-area-id="{{id}}" id="card_{{id}}" style="display: none;">
                     <div class="card-header d-flex justify-content-between align-items-center">
-                        <span class="card-title mb-0 font-weight-bold">Configuration for Area <span class="area-display-num">#{{responsenumber}}</span></span>
-                        <button type="button" class="btn btn-danger btn-sm btn-trash-area" data-area-id="{{id}}" title="Delete Area">
+                        <span class="card-title mb-0 font-weight-bold">{{#str}}configurationforarea, mod_paper{{/str}} <span class="area-display-num">#{{responsenumber}}</span></span>
+                        <button type="button" class="btn btn-danger btn-sm btn-trash-area" data-area-id="{{id}}" title="{{#str}}deletearea, mod_paper{{/str}}">
                             <i class="fa fa-trash"></i>
                         </button>
                     </div>
                     <div class="card-body">
-                        <fieldset class="border p-3 mb-3 fieldset-namefield">
+                        <fieldset class="border p-3 mb-3">
                             <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}fieldrole, mod_paper{{/str}}</legend>
                             <p class="text-muted small mb-3">{{#str}}fieldrole_help, mod_paper{{/str}}</p>
-                            
                             <div class="form-check form-check-inline">
-                                <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[{{id}}]" id="nft_none_{{id}}" value="0" {{#namefield_none}}checked{{/namefield_none}}>
-                                <label class="form-check-label" for="nft_none_{{id}}">{{#str}}fieldrole_standard, mod_paper{{/str}}</label>
+                                <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[{{id}}]" id="nft_standard_{{id}}" value="0" {{#namefield_standard}}checked{{/namefield_standard}}>
+                                <label class="form-check-label" for="nft_standard_{{id}}">{{#str}}fieldrole_standard, mod_paper{{/str}}</label>
                             </div>
-                            
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[{{id}}]" id="nft_fullname_{{id}}" value="1" {{#namefield_fullname}}checked{{/namefield_fullname}}>
                                 <label class="form-check-label" for="nft_fullname_{{id}}">{{#str}}fieldrole_fullname, mod_paper{{/str}}</label>
                             </div>
-                            
-                            {{#enablemoodleusername}}
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[{{id}}]" id="nft_username_{{id}}" value="2" {{#namefield_username}}checked{{/namefield_username}}>
                                 <label class="form-check-label" for="nft_username_{{id}}">{{#str}}fieldrole_username, mod_paper{{/str}}</label>
                             </div>
-                            {{/enablemoodleusername}}
-
                             <div class="form-check form-check-inline">
                                 <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[{{id}}]" id="nft_displayonly_{{id}}" value="3" {{#namefield_displayonly}}checked{{/namefield_displayonly}}>
                                 <label class="form-check-label" for="nft_displayonly_{{id}}">{{#str}}fieldrole_displayonly, mod_paper{{/str}}</label>
                             </div>
                         </fieldset>
 
-                        <fieldset class="border p-3 mb-3">
-                            <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Question / Topic</legend>
-                            <p class="text-muted small mb-3">Provide the specific question or topic that the student is responding to in this designated area.</p>
-                            <div class="form-group">
-                                <textarea class="form-control" id="question_{{id}}" name="question[{{id}}]">{{question}}</textarea>
-                            </div>
-                        </fieldset>
+                        <div class="standard-fields-wrapper" {{#isnamefield}}style="display: none;"{{/isnamefield}}>
+                            <fieldset class="border p-3 mb-3">
+                                <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}questiontopic, mod_paper{{/str}}</legend>
+                                <p class="text-muted small mb-3">{{#str}}questiontopic_help, mod_paper{{/str}}</p>
+                                <div class="form-group">
+                                    <textarea class="form-control" id="question_{{id}}" name="question[{{id}}]">{{question}}</textarea>
+                                </div>
+                            </fieldset>
 
-                        <fieldset class="border p-3 mb-3">
-                            <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Correct Answer</legend>
-                            <p class="text-muted small mb-3">Specify the expected correct answer and how strictly the AI should evaluate the student's response against it.</p>
-                            <div class="mb-2">
+                            <fieldset class="border p-3 mb-3">
+                                <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}correctanswer, mod_paper{{/str}}</legend>
+                                <p class="text-muted small mb-3">{{#str}}correctanswer_help, mod_paper{{/str}}</p>
+                                <div class="mb-2">
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_none_{{id}}" value="none" {{#correctanswermode_none}}checked{{/correctanswermode_none}}>
+                                        <label class="form-check-label" for="cam_none_{{id}}">{{#str}}answermode_none, mod_paper{{/str}}</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_rel_{{id}}" value="relevant" {{#correctanswermode_relevant}}checked{{/correctanswermode_relevant}}>
+                                        <label class="form-check-label" for="cam_rel_{{id}}">{{#str}}answermode_relevant, mod_paper{{/str}}</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_man_{{id}}" value="manual" {{#correctanswermode_manual}}checked{{/correctanswermode_manual}}>
+                                        <label class="form-check-label" for="cam_man_{{id}}">{{#str}}answermode_manual, mod_paper{{/str}}</label>
+                                    </div>
+                                    <div class="form-check form-check-inline">
+                                        <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_sem_{{id}}" value="samemeaning" {{#correctanswermode_samemeaning}}checked{{/correctanswermode_samemeaning}}>
+                                        <label class="form-check-label" for="cam_sem_{{id}}">{{#str}}answermode_samemeaning, mod_paper{{/str}}</label>
+                                    </div>
+                                </div>
+                                <div class="form-group manual-grade-wrapper" id="manual_grade_wrapper_{{id}}" {{^show_correctanswer}}style="display: none;"{{/show_correctanswer}}>
+                                    <label for="correctanswer_{{id}}">{{#str}}thecorrectanswer, mod_paper{{/str}}</label>
+                                    <textarea class="form-control" id="correctanswer_{{id}}" name="correctanswer[{{id}}]">{{correctanswer}}</textarea>
+                                </div>
+                            </fieldset>
+
+                            <fieldset class="border p-3 mb-3">
+                                <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}grammarcorrection, mod_paper{{/str}}</legend>
+                                <p class="text-muted small mb-3">{{#str}}grammarcorrection_help, mod_paper{{/str}}</p>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_none_{{id}}" value="none" {{#correctanswermode_none}}checked{{/correctanswermode_none}}>
-                                    <label class="form-check-label" for="cam_none_{{id}}">None</label>
+                                    <input class="form-check-input" type="radio" name="grammarcorrections[{{id}}]" id="gc_yes_{{id}}" value="yes" {{#grammarcorrections_yes}}checked{{/grammarcorrections_yes}}>
+                                    <label class="form-check-label" for="gc_yes_{{id}}">{{#str}}yes, mod_paper{{/str}}</label>
                                 </div>
                                 <div class="form-check form-check-inline">
-                                    <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_rel_{{id}}" value="relevant" {{#correctanswermode_relevant}}checked{{/correctanswermode_relevant}}>
-                                    <label class="form-check-label" for="cam_rel_{{id}}">Is relevant to question</label>
+                                    <input class="form-check-input" type="radio" name="grammarcorrections[{{id}}]" id="gc_no_{{id}}" value="no" {{#grammarcorrections_no}}checked{{/grammarcorrections_no}}>
+                                    <label class="form-check-label" for="gc_no_{{id}}">{{#str}}no, mod_paper{{/str}}</label>
                                 </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_exact_{{id}}" value="exactly" {{#correctanswermode_exactly}}checked{{/correctanswermode_exactly}}>
-                                    <label class="form-check-label" for="cam_exact_{{id}}">Exactly</label>
+                            </fieldset>
+
+                            <fieldset class="border p-3 mb-3">
+                                <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}feedback, mod_paper{{/str}}</legend>
+                                <p class="text-muted small mb-3">{{#str}}feedbackmode_help, mod_paper{{/str}}</p>
+                                <div class="form-group mb-0">
+                                    <div class="form-check">
+                                        <input class="form-check-input fm-radio" type="radio" name="feedbackmode[{{id}}]" id="fm_none_{{id}}" value="none" {{#feedbackmode_none}}checked{{/feedbackmode_none}}>
+                                        <label class="form-check-label" for="fm_none_{{id}}">{{#str}}feedback_none, mod_paper{{/str}}</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input fm-radio" type="radio" name="feedbackmode[{{id}}]" id="fm_gram_{{id}}" value="grammatical" {{#feedbackmode_grammatical}}checked{{/feedbackmode_grammatical}}>
+                                        <label class="form-check-label" for="fm_gram_{{id}}">{{#str}}feedback_grammatical, mod_paper{{/str}}</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input fm-radio" type="radio" name="feedbackmode[{{id}}]" id="fm_cust_{{id}}" value="custom" {{#feedbackmode_custom}}checked{{/feedbackmode_custom}}>
+                                        <label class="form-check-label" for="fm_cust_{{id}}">{{#str}}feedback_custom, mod_paper{{/str}}</label>
+                                    </div>
                                 </div>
-                                <div class="form-check form-check-inline">
-                                    <input class="form-check-input cam-radio" data-area-id="{{id}}" type="radio" name="correctanswermode[{{id}}]" id="cam_same_{{id}}" value="samemeaning" {{#correctanswermode_samemeaning}}checked{{/correctanswermode_samemeaning}}>
-                                    <label class="form-check-label" for="cam_same_{{id}}">Same meaning as text</label>
+                                <div class="form-group mt-3 feedback-instructions-wrapper" id="feedback_instructions_wrapper_{{id}}" {{^feedbackmode_custom}}style="display: none;"{{/feedbackmode_custom}}>
+                                    <label for="feedbackinstructions_{{id}}">{{#str}}feedbackinstructions, mod_paper{{/str}}</label>
+                                    <p class="text-muted small mb-1">{{#str}}feedbackinstructions_help, mod_paper{{/str}}</p>
+                                    <textarea class="form-control" id="feedbackinstructions_{{id}}" name="feedbackinstructions[{{id}}]">{{feedbackinstructions}}</textarea>
                                 </div>
-                            </div>
-                            <textarea class="form-control mb-2 ca-textarea" id="ca_textarea_{{id}}" name="correctanswer[{{id}}]">{{correctanswer}}</textarea>
-                        </fieldset>
+                            </fieldset>
 
-                        <fieldset class="border p-3 mb-3">
-                            <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Give Grammar corrections?</legend>
-                            <p class="text-muted small mb-3">Choose whether the AI should correct the student's grammar for this specific area.</p>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="grammarcorrections[{{id}}]" id="gc_no_{{id}}" value="no" {{#grammarcorrections_no}}checked{{/grammarcorrections_no}}>
-                                <label class="form-check-label" for="gc_no_{{id}}">No</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="grammarcorrections[{{id}}]" id="gc_major_{{id}}" value="major" {{#grammarcorrections_major}}checked{{/grammarcorrections_major}}>
-                                <label class="form-check-label" for="gc_major_{{id}}">On major mistakes</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="grammarcorrections[{{id}}]" id="gc_all_{{id}}" value="all" {{#grammarcorrections_all}}checked{{/grammarcorrections_all}}>
-                                <label class="form-check-label" for="gc_all_{{id}}">On all mistakes</label>
-                            </div>
-                        </fieldset>
+                            <fieldset class="border p-3 mb-3 fieldset-grading">
+                                <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}automatedgrading, mod_paper{{/str}}</legend>
+                                <p class="text-muted small mb-3">{{#str}}automatedgrading_help, mod_paper{{/str}}</p>
+                                <div class="form-group mb-3">
+                                    <label for="maxgrade_{{id}}">{{#str}}maxpossiblegrade, mod_paper{{/str}}</label>
+                                    <input type="number" step="0.5" class="form-control col-sm-3" id="maxgrade_{{id}}" name="maxgrade[{{id}}]" value="{{maxgrade}}">
+                                </div>
+                                <div class="form-group mb-0">
+                                    <div class="form-check">
+                                        <input class="form-check-input gm-radio" type="radio" name="gradingmode[{{id}}]" id="gm_none_{{id}}" value="none" {{#gradingmode_none}}checked{{/gradingmode_none}}>
+                                        <label class="form-check-label" for="gm_none_{{id}}">{{#str}}grading_none, mod_paper{{/str}}</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input gm-radio" type="radio" name="gradingmode[{{id}}]" id="gm_inc_{{id}}" value="incorrect" {{#gradingmode_incorrect}}checked{{/gradingmode_incorrect}}>
+                                        <label class="form-check-label" for="gm_inc_{{id}}">{{#str}}grading_incorrect, mod_paper{{/str}}</label>
+                                    </div>
+                                    <div class="form-check">
+                                        <input class="form-check-input gm-radio" type="radio" name="gradingmode[{{id}}]" id="gm_over_{{id}}" value="overall" {{#gradingmode_overall}}checked{{/gradingmode_overall}}>
+                                        <label class="form-check-label" for="gm_over_{{id}}">{{#str}}grading_overall, mod_paper{{/str}}</label>
+                                    </div>
+                                </div>
+                                <div class="form-group mt-3 grade-instructions-wrapper" id="grade_instructions_wrapper_{{id}}" {{^gradingmode_overall}}style="display: none;"{{/gradingmode_overall}}>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="mb-0" for="gradeinstructions_{{id}}">{{#str}}gradeinstructions, mod_paper{{/str}}</label>
+                                        <div class="d-flex align-items-center">
+                                            <select class="form-control form-control-sm preset-selector mr-2" data-area-id="{{id}}" style="width: auto;">
+                                                {{#preset_options}}
+                                                <option value="{{key}}">{{value}}</option>
+                                                {{/preset_options}}
+                                            </select>
+                                            <a href="{{manage_presets_url}}" target="_blank" class="btn btn-link btn-sm p-0" title="{{#str}}managepresets, mod_paper{{/str}}">
+                                                <i class="fa fa-cog text-muted"></i>
+                                            </a>
+                                        </div>
+                                    </div>
+                                    <p class="text-muted small mb-1">{{#str}}gradeinstructions_help, mod_paper{{/str}}</p>
+                                    <textarea class="form-control" id="gradeinstructions_{{id}}" name="gradeinstructions[{{id}}]">{{gradeinstructions}}</textarea>
+                                </div>
+                            </fieldset>
+                        </div>
 
-                        <fieldset class="border p-3 mb-3">
-                            <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Give Feedback?</legend>
-                            <p class="text-muted small mb-3">Select the type of feedback the AI should provide for the student's answer.</p>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="feedbackmode[{{id}}]" id="fb_none_{{id}}" value="none" {{#feedbackmode_none}}checked{{/feedbackmode_none}}>
-                                <label class="form-check-label" for="fb_none_{{id}}">None</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="feedbackmode[{{id}}]" id="fb_gram_{{id}}" value="grammar" {{#feedbackmode_grammar}}checked{{/feedbackmode_grammar}}>
-                                <label class="form-check-label" for="fb_gram_{{id}}">On grammar mistakes</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="feedbackmode[{{id}}]" id="fb_inc_{{id}}" value="incorrect" {{#feedbackmode_incorrect}}checked{{/feedbackmode_incorrect}}>
-                                <label class="form-check-label" for="fb_inc_{{id}}">On incorrect answers</label>
-                            </div>
-                            <div class="form-check form-check-inline">
-                                <input class="form-check-input" type="radio" name="feedbackmode[{{id}}]" id="fb_over_{{id}}" value="overall" {{#feedbackmode_overall}}checked{{/feedbackmode_overall}}>
-                                <label class="form-check-label" for="fb_over_{{id}}">Overall</label>
-                            </div>
-                        </fieldset>
-
-                        <fieldset class="border p-3 mb-3">
-                            <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Grading</legend>
-                            <p class="text-muted small mb-3">Define the maximum score for this area and provide any specific instructions on how the AI should calculate the grade.</p>
-                            <label class="d-block mt-2">Max Grade (leave empty for no grade)</label>
-                            <input type="number" step="0.5" class="form-control" name="maxgrade[{{id}}]" value="{{maxgrade}}">
-                            <label class="d-block mt-2">Instructions on how to calculate</label>
-                            <div class="d-flex mb-1">
-                                <select class="form-control mr-2 preset-select" data-area-id="{{id}}">
-                                    {{#preset_options}}
-                                    <option value="{{key}}">{{value}}</option>
-                                    {{/preset_options}}
-                                </select>
-                                <a href="{{manage_presets_url}}" class="btn btn-link btn-sm" target="_blank" title="{{#str}}managepresets, mod_paper{{/str}}">
-                                    <i class="fa fa-cog"></i>
-                                </a>
-                            </div>
-                            <textarea class="form-control" name="gradeinstructions[{{id}}]" id="gi_{{id}}">{{gradeinstructions}}</textarea>
-                        </fieldset>
-
-                        <fieldset class="border p-3 mb-3">
-                            <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Manual Area Adjustments (%)</legend>
-                            <p class="text-muted small mb-3">Fine-tune the physical boundaries of this response area on the original template image. Changing these values instantly updates the box overlays on the left.</p>
-                            <div class="row mt-2">
+                        <fieldset class="border p-3">
+                            <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}positionandsize, mod_paper{{/str}}</legend>
+                            <div class="row">
                                 <div class="col-3">
-                                    <label>Left</label>
-                                    <input type="number" step="0.1" class="form-control pos-input" data-area="{{id}}" data-attr="left" name="box_x[{{id}}]" value="{{box_x}}">
+                                    <label class="small">{{#str}}pos_left, mod_paper{{/str}}</label>
+                                    <input type="number" step="0.1" class="form-control form-control-sm pos-input" data-area="{{id}}" data-attr="left" name="box_x[{{id}}]" value="{{box_x}}">
                                 </div>
                                 <div class="col-3">
-                                    <label>Top</label>
-                                    <input type="number" step="0.1" class="form-control pos-input" data-area="{{id}}" data-attr="top" name="box_y[{{id}}]" value="{{box_y}}">
+                                    <label class="small">{{#str}}pos_top, mod_paper{{/str}}</label>
+                                    <input type="number" step="0.1" class="form-control form-control-sm pos-input" data-area="{{id}}" data-attr="top" name="box_y[{{id}}]" value="{{box_y}}">
                                 </div>
                                 <div class="col-3">
-                                    <label>Width</label>
-                                    <input type="number" step="0.1" class="form-control pos-input" data-area="{{id}}" data-attr="width" name="box_w[{{id}}]" value="{{box_w}}">
+                                    <label class="small">{{#str}}pos_width, mod_paper{{/str}}</label>
+                                    <input type="number" step="0.1" class="form-control form-control-sm pos-input" data-area="{{id}}" data-attr="width" name="box_w[{{id}}]" value="{{box_w}}">
                                 </div>
                                 <div class="col-3">
-                                    <label>Height</label>
-                                    <input type="number" step="0.1" class="form-control pos-input" data-area="{{id}}" data-attr="height" name="box_h[{{id}}]" value="{{box_h}}">
+                                    <label class="small">{{#str}}pos_height, mod_paper{{/str}}</label>
+                                    <input type="number" step="0.1" class="form-control form-control-sm pos-input" data-area="{{id}}" data-attr="height" name="box_h[{{id}}]" value="{{box_h}}">
                                 </div>
                             </div>
                         </fieldset>
                     </div>
                 </div>
                 {{/responseareas}}
-                <button type="submit" class="btn btn-success mt-2 btn-block">Save Configuration</button>
-                <a href="view.php?id={{cmid}}" class="btn btn-secondary mt-2 btn-block">Return to Top</a>
+                <div class="mt-4">
+                    <button type="submit" class="btn btn-success btn-lg btn-block">{{#str}}saveallconfigurations, mod_paper{{/str}}</button>
+                    <a href="{{actionurl}}&amp;reset=1" class="btn btn-outline-danger btn-block mt-2">{{#str}}resettemplate, mod_paper{{/str}}</a>
+                </div>
             </form>
         </div>
     </div>
-    
-    <!-- Hidden Blueprint for new Areas -->
-    <div id="area-card-blueprint" style="display: none;">
-        <div class="card mb-2 area-card" data-area-id="NEWID" id="card_NEWID" style="display: none;">
-            <div class="card-header d-flex justify-content-between align-items-center">
-                <span class="card-title mb-0 font-weight-bold">Configuration for Area <span class="area-display-num">#NEWNUM</span></span>
-                <button type="button" class="btn btn-danger btn-sm btn-trash-area" data-area-id="NEWID" title="Delete Area">
-                    <i class="fa fa-trash"></i>
-                </button>
-            </div>
-            <div class="card-body">
-                <fieldset class="border p-3 mb-3 fieldset-namefield">
-                    <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">{{#str}}fieldrole, mod_paper{{/str}}</legend>
-                    <p class="text-muted small mb-3">{{#str}}fieldrole_help, mod_paper{{/str}}</p>
-                    
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[NEWID]" id="nft_none_NEWID" value="0" checked>
-                        <label class="form-check-label" for="nft_none_NEWID">{{#str}}fieldrole_standard, mod_paper{{/str}}</label>
-                    </div>
-                    
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[NEWID]" id="nft_fullname_NEWID" value="1">
-                        <label class="form-check-label" for="nft_fullname_NEWID">{{#str}}fieldrole_fullname, mod_paper{{/str}}</label>
-                    </div>
-                    
-                    {{#enablemoodleusername}}
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[NEWID]" id="nft_username_NEWID" value="2">
-                        <label class="form-check-label" for="nft_username_NEWID">{{#str}}fieldrole_username, mod_paper{{/str}}</label>
-                    </div>
-                    {{/enablemoodleusername}}
-
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input namefield-radio" type="radio" name="namefieldtype[NEWID]" id="nft_displayonly_NEWID" value="3">
-                        <label class="form-check-label" for="nft_displayonly_NEWID">{{#str}}fieldrole_displayonly, mod_paper{{/str}}</label>
-                    </div>
-                </fieldset>
-
-                <fieldset class="border p-3 mb-3">
-                    <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Question / Topic</legend>
-                    <p class="text-muted small mb-3">Provide the specific question or topic that the student is responding to in this designated area.</p>
-                    <div class="form-group">
-                        <textarea class="form-control" id="question_NEWID" name="question[NEWID]"></textarea>
-                    </div>
-                </fieldset>
-
-                <fieldset class="border p-3 mb-3">
-                    <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Correct Answer</legend>
-                    <p class="text-muted small mb-3">Specify the expected correct answer and how strictly the AI should evaluate the student's response against it.</p>
-                    <div class="mb-2">
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input cam-radio" data-area-id="NEWID" type="radio" name="correctanswermode[NEWID]" id="cam_none_NEWID" value="none" checked>
-                            <label class="form-check-label" for="cam_none_NEWID">None</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input cam-radio" data-area-id="NEWID" type="radio" name="correctanswermode[NEWID]" id="cam_rel_NEWID" value="relevant">
-                            <label class="form-check-label" for="cam_rel_NEWID">Is relevant to question</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input cam-radio" data-area-id="NEWID" type="radio" name="correctanswermode[NEWID]" id="cam_exact_NEWID" value="exactly">
-                            <label class="form-check-label" for="cam_exact_NEWID">Exactly</label>
-                        </div>
-                        <div class="form-check form-check-inline">
-                            <input class="form-check-input cam-radio" data-area-id="NEWID" type="radio" name="correctanswermode[NEWID]" id="cam_same_NEWID" value="samemeaning">
-                            <label class="form-check-label" for="cam_same_NEWID">Same meaning as text</label>
-                        </div>
-                    </div>
-                    <textarea class="form-control mb-2 ca-textarea" id="ca_textarea_NEWID" name="correctanswer[NEWID]"></textarea>
-                </fieldset>
-
-                <!-- Feedback -->
-                <fieldset class="border p-3 mb-3">
-                    <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Give Feedback?</legend>
-                    <p class="text-muted small mb-3">Select the type of feedback the AI should provide for the student's answer.</p>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="feedbackmode[NEWID]" id="fb_none_NEWID" value="none" checked>
-                        <label class="form-check-label" for="fb_none_NEWID">None</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="feedbackmode[NEWID]" id="fb_gram_NEWID" value="grammar">
-                        <label class="form-check-label" for="fb_gram_NEWID">On grammar mistakes</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="feedbackmode[NEWID]" id="fb_inc_NEWID" value="incorrect">
-                        <label class="form-check-label" for="fb_inc_NEWID">On incorrect answers</label>
-                    </div>
-                    <div class="form-check form-check-inline">
-                        <input class="form-check-input" type="radio" name="feedbackmode[NEWID]" id="fb_over_NEWID" value="overall">
-                        <label class="form-check-label" for="fb_over_NEWID">Overall</label>
-                    </div>
-                </fieldset>
-
-                <!-- Grading -->
-                <fieldset class="border p-3 mb-3">
-                    <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Grading</legend>
-                    <p class="text-muted small mb-3">Define the maximum score for this area and provide any specific instructions on how the AI should calculate the grade.</p>
-                    <label class="d-block mt-2">Max Grade</label>
-                    <input type="number" step="0.5" class="form-control" name="maxgrade[NEWID]" value="0">
-                    <label class="d-block mt-2">Instructions on how to calculate</label>
-                    <div class="d-flex mb-1">
-                        <select class="form-control mr-2 preset-select" data-area-id="NEWID">
-                            {{#preset_options}}
-                            <option value="{{key}}">{{value}}</option>
-                            {{/preset_options}}
-                        </select>
-                        <a href="{{manage_presets_url}}" class="btn btn-link btn-sm" target="_blank" title="{{#str}}managepresets, mod_paper{{/str}}">
-                            <i class="fa fa-cog"></i>
-                        </a>
-                    </div>
-                    <textarea class="form-control" name="gradeinstructions[NEWID]" id="gi_NEWID">Subtract 1 mark from {maxgrade} for each non minor grammar mistake. Do not go lower than 0</textarea>
-                </fieldset>
-
-                <!-- Manual Override -->
-                <fieldset class="border p-3 mb-3">
-                    <legend class="w-auto px-2 font-weight-bold" style="font-size: 1rem;">Manual Area Adjustments (%)</legend>
-                    <p class="text-muted small mb-3">Fine-tune the physical boundaries of this response area on the original template image. Changing these values instantly updates the box overlays on the left.</p>
-                    <div class="row mt-2">
-                        <div class="col-3"><label>Left</label><input type="number" step="0.1" class="form-control pos-input blueprint-input" data-area="NEWID" data-attr="left" name="box_x[NEWID]" value="10"></div>
-                        <div class="col-3"><label>Top</label><input type="number" step="0.1" class="form-control pos-input blueprint-input" data-area="NEWID" data-attr="top" name="box_y[NEWID]" value="10"></div>
-                        <div class="col-3"><label>Width</label><input type="number" step="0.1" class="form-control pos-input blueprint-input" data-area="NEWID" data-attr="width" name="box_w[NEWID]" value="20"></div>
-                        <div class="col-3"><label>Height</label><input type="number" step="0.1" class="form-control pos-input blueprint-input" data-area="NEWID" data-attr="height" name="box_h[NEWID]" value="5"></div>
-                    </div>
-                </fieldset>
-            </div>
-        </div>
-    </div>
-
     {{/hastemplate}}
 </div>
-
-{{#js}}
-require(['mod_paper/setup'], function(setup) {
-    var params = {};
-    {{#imagebase64}}
-    params.imagebase64 = "{{imagebase64}}";
-    {{/imagebase64}}
-    {{#responseareas_json}}
-    params.responseareas = {{{responseareas_json}}};
-    {{/responseareas_json}}
-    {{#preset_contents_json}}
-    params.preset_contents_json = {{{preset_contents_json}}};
-    {{/preset_contents_json}}
-    
-    setup.init(params);
-});
-{{/js}}

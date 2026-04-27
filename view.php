@@ -26,39 +26,18 @@ $PAGE->set_heading(format_string($course->fullname));
 echo $OUTPUT->header();
 echo $OUTPUT->heading(format_string($paper->name));
 
-if (has_capability('mod/paper:manage', $context)) {
-    echo $OUTPUT->box_start('generalbox');
-    
-    // Check if setup is done
-    $has_areas = $DB->record_exists('paper_response_areas', ['paperid' => $paper->id]);
-    
-    if (!$has_areas) {
-        $setupurl = new moodle_url('/mod/paper/setup.php', ['id' => $cm->id]);
-        echo html_writer::tag('div', 'Setup is not complete. Please identify response areas first.', ['class' => 'alert alert-warning']);
-        echo html_writer::link($setupurl, get_string('viewsetup', 'mod_paper'), ['class' => 'btn btn-primary']);
-    } else {
-        $setupurl = new moodle_url('/mod/paper/setup.php', ['id' => $cm->id]);
-        echo html_writer::link($setupurl, get_string('viewsetup', 'mod_paper'), ['class' => 'btn btn-secondary mr-2']);
-        
-        $processurl = new moodle_url('/mod/paper/process_submissions.php', ['id' => $cm->id]);
-        echo html_writer::link($processurl, get_string('uploadsubmissions', 'mod_paper'), ['class' => 'btn btn-primary mr-2']);
-        
-        $reportsurl = new moodle_url('/mod/paper/reports.php', ['id' => $cm->id]);
-        echo html_writer::link($reportsurl, get_string('viewreports', 'mod_paper'), ['class' => 'btn btn-info mr-2']);
+echo $OUTPUT->box(get_string('view_help', 'mod_paper'), 'info mb-3');
 
-        $presetsurl = new moodle_url('/mod/paper/presets.php', ['id' => $cm->id]);
-        echo html_writer::link($presetsurl, get_string('managepresets', 'mod_paper'), ['class' => 'btn btn-outline-primary']);
-        
-        // Show summary
-        $evalcount = $DB->count_records('paper_evaluations', ['paperid' => $paper->id]);
-        echo html_writer::tag('p', "Total evaluations processed: {$evalcount}", ['class' => 'mt-3']);
-    }
-    
-    echo $OUTPUT->box_end();
-} else {
-    // Student view
-    echo $OUTPUT->box("This activity is managed by your teacher. Evaluations will be available here when completed.");
-    // Students would see their own evaluations here in a complete implementation.
-}
+$templatecontext = [
+    'ismanager' => has_capability('mod/paper:manage', $context),
+    'hasareas' => $DB->record_exists('paper_response_areas', ['paperid' => $paper->id]),
+    'setupurl' => (new moodle_url('/mod/paper/setup.php', ['id' => $cm->id]))->out(false),
+    'processurl' => (new moodle_url('/mod/paper/process_submissions.php', ['id' => $cm->id]))->out(false),
+    'reportsurl' => (new moodle_url('/mod/paper/reports.php', ['id' => $cm->id]))->out(false),
+    'presetsurl' => (new moodle_url('/mod/paper/presets.php', ['id' => $cm->id]))->out(false),
+    'evalcount' => $DB->count_records('paper_evaluations', ['paperid' => $paper->id]),
+];
+
+echo $OUTPUT->render_from_template('mod_paper/view_page', $templatecontext);
 
 echo $OUTPUT->footer();

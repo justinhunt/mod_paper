@@ -1,0 +1,58 @@
+<div class="mod_paper_reports_page">
+    <div class="alert alert-info">
+        {{#str}}reports_help, mod_paper{{/str}}
+    </div>
+
+    {{#noevaluations}}
+        <div class="alert alert-info text-center mt-4 mb-4">
+            {{#str}}noevaluationsyet, mod_paper{{/str}}
+        </div>
+    {{/noevaluations}}
+
+    {{^noevaluations}}
+        <table class="generaltable table table-striped mt-3">
+            <thead>
+                <tr>
+                    <th>{{#str}}evaluationid, mod_paper{{/str}}</th>
+                    <th>{{#str}}studentname, mod_paper{{/str}}</th>
+                    <th>{{#str}}totalgrade, mod_paper{{/str}}</th>
+                    <th>{{#str}}actions, mod_paper{{/str}}</th>
+                </tr>
+            </thead>
+            <tbody>
+                {{#evaluations}}
+                <tr>
+                    <td>{{id}}</td>
+                    <td>{{studentname}}</td>
+                    <td>{{totalgrade}}</td>
+                    <td>
+                        {{#actions}}
+                            <a href="{{url}}" class="{{class}}" title="{{title}}" {{#target}}target="{{target}}"{{/target}} {{#onclick}}onclick="{{onclick}}"{{/onclick}}>
+                                {{{icon}}}
+                            </a>
+                        {{/actions}}
+                    </td>
+                </tr>
+                {{/evaluations}}
+            </tbody>
+        </table>
+
+        {{#pendingoverall}}
+            <div class="alert alert-info mb-3 small">
+                {{#str}}processingevaluations, mod_paper{{/str}}
+            </div>
+        {{/pendingoverall}}
+    {{/noevaluations}}
+
+    <div class="mt-3 mb-3 d-flex flex-wrap" style="gap: 10px;">
+        {{#actionbuttons}}
+            <a href="{{url}}" class="{{class}}" {{#target}}target="{{target}}"{{/target}} {{#onclick}}onclick="{{onclick}}"{{/onclick}}>
+                {{text}}
+            </a>
+        {{/actionbuttons}}
+    </div>
+
+    <div class="mt-2 mb-3">
+        <a href="{{returntotopurl}}" class="btn btn-secondary">{{#str}}returntotop, mod_paper{{/str}}</a>
+    </div>
+</div>

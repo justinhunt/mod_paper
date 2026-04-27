@@ -32,6 +32,13 @@ Paper is a Moodle activity module that allows the teacher to distribute paper as
 2. Log in as an administrator and go to `Site Administration > Notifications` to complete the installation.
 3. Configure the necessary API keys in `Site Administration > Plugins > Activity modules > Paper`.
 
+## Try it
+
+There is a testworksheet.pdf and testworksheet_submissions.pdf in the samples folder. You can test with those.
+
+NB At the moment the worksheet must be A4 size and portrait orientation.
+
+
 ## Permissions
 
 - `mod/paper:addinstance`: Allow creating new Paper activities.

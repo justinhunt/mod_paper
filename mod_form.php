@@ -31,7 +31,7 @@ class mod_paper_mod_form extends moodleform_mod {
 
         $this->standard_intro_elements();
 
-        $mform->addElement('header', 'papersettings', get_string('pluginname', 'mod_paper') . ' Settings');
+        $mform->addElement('header', 'papersettings', get_string('papersettings', 'mod_paper'));
 
         $options = [
             1 => get_string('yes'),

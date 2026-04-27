@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
 /**
  * Strings for component 'paper'.
  *
@@ -148,5 +163,128 @@ $string['fieldrole_fullname'] = 'Full Name';
 $string['fieldrole_username'] = 'Moodle Username';
 $string['fieldrole_displayonly'] = 'Display Only (No Grading)';
 $string['showtotalscore'] = 'Show total score';
-$string['showtotalscore_help'] = 'If enabled, the total score will be displayed at the bottom of the evaluation on the PDF and web view.';
+$string['showtotalscore_help'] = 'If enabled, the total score will be displayed at the bottom of the evaluation report.';
 
+// Page instructions
+$string['view_help'] = 'This is the main activity page. Once you have set up your template, you can upload scanned student submissions here for processing.';
+$string['setup_help'] = 'Upload a blank worksheet and drag your mouse over response areas to define them. You can configure each area for OCR, grammar correction, and automated grading.';
+$string['presets_help'] = 'Manage your worksheet presets here. You can save your current response area layout as a preset to reuse it in other Paper activities, or apply an existing preset to this instance.';
+$string['process_submissions_help'] = 'Upload the scanned PDF of student submissions. The system will process each page as an individual student response and perform AI evaluation.';
+$string['reports_help'] = 'Review completed evaluations here. You can view individual student feedback, adjust grades manually, or download all evaluations as a single combined PDF report for printing.';
+
+// UI Strings
+$string['reports'] = 'Reports';
+$string['evaluationreportsfor'] = 'Evaluation Reports for: {$a}';
+$string['noevaluationsfound'] = 'No evaluations found.';
+$string['noevaluationsyet'] = 'There are no evaluations to see yet. When they are ready they will show here.';
+$string['processingevaluations'] = 'AI is currently evaluating student work. This page will refresh automatically when complete...';
+$string['evaluationid'] = 'Eval. ID';
+$string['studentname'] = 'Student Name';
+$string['totalgrade'] = 'Total Grade';
+$string['actions'] = 'Actions';
+$string['evaluationpending'] = 'Evaluation Pending...';
+$string['deleteevaluationconfirm'] = 'Are you sure you want to delete this evaluation?';
+$string['viewallcombinedpdfs'] = 'View All Combined PDFs';
+$string['reevaluateall'] = 'Re-evaluate All';
+$string['reevaluateallconfirm'] = 'Are you sure you want to clear all existing grammar corrections and re-evaluate them?';
+$string['deleteallsubmissions'] = 'Delete All Submissions';
+$string['deleteallsubmissionsconfirm'] = 'Are you sure you want to delete ALL evaluations? This cannot be undone.';
+$string['returntotop'] = 'Return to Top';
+
+// Setup/View Strings
+$string['setupnotcomplete'] = 'Setup is not complete. Please identify response areas first.';
+$string['viewsetup'] = 'View Setup';
+$string['setuptemplate'] = 'Setup Template';
+$string['editsetup'] = 'Edit Setup';
+$string['viewreports'] = 'View Reports';
+$string['setuptemplatefor'] = 'Setup Template for: {$a}';
+$string['managepresetsfor'] = 'Manage Presets for: {$a}';
+$string['uploadscansfor'] = 'Upload Scans for: {$a}';
+$string['uploadsubmissions'] = 'Upload Submissions';
+$string['processingstatus'] = 'Processing Status';
+$string['viewevaluation'] = 'View Evaluation';
+$string['editmanualevaluation'] = 'Edit Manual Evaluation';
+$string['saveevaluation'] = 'Save Evaluation';
+$string['backtoreports'] = 'Back to Reports';
+$string['returntoreports'] = 'Return to Reports';
+$string['papersettings'] = 'Paper Settings';
+$string['totalscore'] = 'Total score';
+$string['nopresetsfound'] = 'No presets found.';
+$string['applypresetconfirm'] = 'Are you sure you want to apply this preset? It will overwrite any existing response areas.';
+$string['deletepresetconfirm'] = 'Are you sure you want to delete this preset?';
+$string['addnewpreset'] = 'Add New Preset';
+$string['savecurrentaspreset'] = 'Save Current Layout as Preset';
+$string['presetname'] = 'Preset Name';
+$string['presetid'] = 'Preset ID';
+$string['apply'] = 'Apply';
+$string['saving'] = 'Saving...';
+$string['savechanges'] = 'Save Changes';
+$string['changessaved'] = 'Changes saved successfully';
+$string['error'] = 'Error';
+$string['failedtosave'] = 'Failed to save changes';
+$string['ok'] = 'OK';
+$string['responsearea'] = 'Response Area #{$a}';
+$string['configured'] = 'Configured';
+$string['notconfigured'] = 'Not configured';
+$string['allconfigured'] = 'All configured!!';
+$string['noneconfigured'] = 'None configured.';
+$string['nconfigured'] = '{$a->configured}/{$a->total} configured.';
+$string['uploadtemplate'] = 'Upload Worksheet Template';
+$string['uploadtemplate_help'] = 'Upload an image of a blank paper to identify response areas. Response areas should be identifiable by having a clear border around them, and contain no text.';
+$string['templatefile'] = 'Template File (JPG/PNG/PDF)';
+$string['analyzeimage'] = 'Analyze Image';
+$string['identifiedareas'] = 'Identified Areas';
+$string['templateloaded'] = 'Template loaded.';
+$string['uploadnewtemplate'] = 'Upload New Template';
+$string['responseareaconfiguration'] = 'Response Area Configuration';
+$string['addarea'] = 'Add Area';
+$string['configurationforarea'] = 'Configuration for Area';
+$string['deletearea'] = 'Delete Area';
+$string['questiontopic'] = 'Question / Topic';
+$string['questiontopic_help'] = 'Provide the specific question or topic that the student is responding to in this designated area.';
+$string['correctanswer'] = 'Correct Answer';
+$string['correctanswer_help'] = 'Specify the expected correct answer and how strictly the AI should evaluate the student\'s response against it.';
+$string['answermode_none'] = 'None';
+$string['answermode_relevant'] = 'Is relevant to question';
+$string['answermode_manual'] = 'Matches the correct answer';
+$string['answermode_samemeaning'] = 'Same meaning as correct answer';
+$string['thecorrectanswer'] = 'The correct answer';
+$string['grammarcorrection'] = 'Grammar Correction';
+$string['grammarcorrection_help'] = 'Should the AI provide specific grammar and spelling corrections for this area?';
+$string['yes'] = 'Yes';
+$string['no'] = 'No';
+$string['automatedgrading'] = 'Automated Grading';
+$string['automatedgrading_help'] = 'Should the AI assign a grade to this area?';
+$string['grading_none'] = 'None';
+$string['grading_incorrect'] = 'Deduct point for each grammar/spelling mistake';
+$string['grading_overall'] = 'Custom grading instructions';
+$string['maxpossiblegrade'] = 'Max Possible Grade';
+$string['gradeinstructions'] = 'Grading Instructions';
+$string['gradeinstructions_help'] = 'Optionally provide specific grading criteria or rubrics for the AI to follow.';
+$string['feedback_none'] = 'No feedback';
+$string['feedback_grammatical'] = 'Explain grammatical errors';
+$string['feedback_custom'] = 'Custom feedback instructions';
+$string['feedbackmode_help'] = 'What feedback should the AI give the student?';
+
+$string['feedbackinstructions'] = 'Feedback Instructions';
+$string['feedbackinstructions_help'] = 'Provide instructions for the AI on what kind of feedback to generate.';
+$string['positionandsize'] = 'Position and Size (%)';
+$string['pos_left'] = 'Left';
+$string['pos_top'] = 'Top';
+$string['pos_width'] = 'Width';
+$string['pos_height'] = 'Height';
+$string['saveallconfigurations'] = 'Save All Areas';
+$string['resettemplate'] = 'Reset Template';
+$string['area_configurations_saved'] = 'Area configurations saved successfully.';
+$string['editresponse'] = 'Edit Response';
+$string['grade'] = 'Grade';
+$string['originaltextreadonly'] = 'Original Text (Read Only)';
+$string['correctedtext'] = 'Corrected Text';
+$string['feedback'] = 'Feedback';
+$string['cancel'] = 'Cancel';
+$string['templatenotfound'] = 'Warning: Underlying worksheet template image not found. Please re-upload it on the Setup screen.';
+$string['totalevaluationsprocessed'] = 'Total evaluations processed: {$a}';
+$string['studentviewmessage'] = 'This activity is managed by your teacher. Evaluations will be available here when completed.';
+$string['previousstudent'] = 'Previous Student';
+$string['nextstudent'] = 'Next Student';
+$string['feedbacklabel'] = 'Feedback: {$a}';

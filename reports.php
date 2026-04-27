@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
 /**
  * Reports Script for mod_paper
  *
@@ -13,76 +28,125 @@ require_once('lib.php');
 $id = required_param('id', PARAM_INT); // Course module ID
 
 $cm = get_coursemodule_from_id('paper', $id, 0, false, MUST_EXIST);
-$course = $DB->get_record('course', array('id' => $cm->course), '*', MUST_EXIST);
-$paper = $DB->get_record('paper', array('id' => $cm->instance), '*', MUST_EXIST);
+$course = $DB->get_record('course', ['id' => $cm->course], '*', MUST_EXIST);
+$paper = $DB->get_record('paper', ['id' => $cm->instance], '*', MUST_EXIST);
 
 require_login($course, true, $cm);
 $context = context_module::instance($cm->id);
 require_capability('mod/paper:manage', $context);
 
-$PAGE->set_url('/mod/paper/reports.php', array('id' => $cm->id));
-$PAGE->set_title("Reports");
+$PAGE->set_url('/mod/paper/reports.php', ['id' => $cm->id]);
+$PAGE->set_title(get_string('reports', 'mod_paper'));
 $PAGE->set_heading(format_string($course->fullname));
 
 echo $OUTPUT->header();
-echo $OUTPUT->heading("Evalaution Reports for: " . format_string($paper->name));
+echo $OUTPUT->heading(get_string('evaluationreportsfor', 'mod_paper', format_string($paper->name)));
 
 $evaluations = $DB->get_records('paper_evaluations', ['paperid' => $paper->id]);
+$evalcount = count($evaluations);
 
-if (empty($evaluations)) {
-    echo $OUTPUT->notification("No evaluations found.");
-} else {
-    $table = new html_table();
-    $table->head = ['ID', 'Student Name', 'Total Grade', 'Actions'];
-    
+$templatecontext = [
+    'noevaluations' => empty($evaluations),
+    'evaluations' => [],
+    'pendingoverall' => false,
+    'actionbuttons' => [],
+    'returntotopurl' => (new moodle_url('/mod/paper/view.php', ['id' => $cm->id]))->out(false),
+];
+
+if (!empty($evaluations)) {
     foreach ($evaluations as $eval) {
         $viewurl = new moodle_url('/mod/paper/view_eval.php', ['id' => $cm->id, 'evalid' => $eval->id]);
         $deleteurl = new moodle_url('/mod/paper/delete_eval.php', ['id' => $cm->id, 'evalid' => $eval->id, 'sesskey' => sesskey()]);
-        
+        $individualdownloadurl = moodle_url::make_pluginfile_url($context->id, 'mod_paper', 'downloadevaluations', $eval->id, '/', 'evaluation.pdf');
+
         // Check if evaluation is pending
         $sql = "SELECT COUNT(pei.id) 
                 FROM {paper_eval_items} pei
                 JOIN {paper_response_areas} pra ON pra.id = pei.responseareaid
                 WHERE pei.evalid = :evalid AND pra.isnamefield = 0 AND pei.correctedtext = '' AND pra.grammarcorrections != 'no'";
         $pendingcount = $DB->count_records_sql($sql, ['evalid' => $eval->id]);
-        
+
+        $actions = [];
         if ($pendingcount == 0) {
-            $viewlink = html_writer::link($viewurl, $OUTPUT->pix_icon('t/preview', 'View Evaluation'), ['class' => 'mr-2']);
+            $actions[] = [
+                'url' => $viewurl->out(false),
+                'icon' => $OUTPUT->pix_icon('t/preview', get_string('viewevaluation', 'mod_paper')),
+                'class' => 'mr-2',
+                'title' => get_string('viewevaluation', 'mod_paper'),
+            ];
         } else {
-            $viewlink = html_writer::tag('span', '...', ['class' => 'text-muted mr-2', 'title' => 'Evaluation Pending...']);
+            $templatecontext['pendingoverall'] = true;
+            $actions[] = [
+                'url' => '#',
+                'icon' => '...',
+                'class' => 'text-muted mr-2',
+                'title' => get_string('evaluationpending', 'mod_paper'),
+                'onclick' => 'return false;',
+            ];
         }
 
-        $individualdownloadurl = moodle_url::make_pluginfile_url($context->id, 'mod_paper', 'downloadevaluations', $eval->id, '/', 'evaluation.pdf');
-        $downloadlink = html_writer::link($individualdownloadurl, $OUTPUT->pix_icon('f/pdf', 'Download PDF'), ['target' => '_blank', 'class' => 'mr-2']);
+        $actions[] = [
+            'url' => $individualdownloadurl->out(false),
+            'icon' => $OUTPUT->pix_icon('f/pdf', get_string('download')),
+            'class' => 'mr-2',
+            'title' => get_string('download'),
+            'target' => '_blank',
+        ];
 
-        $deletelink = html_writer::link($deleteurl, $OUTPUT->pix_icon('t/delete', 'Delete'), [
-            'onclick' => "return confirm('Are you sure you want to delete this evaluation?');",
-            'class' => 'text-danger'
-        ]);
+        $actions[] = [
+            'url' => $deleteurl->out(false),
+            'icon' => $OUTPUT->pix_icon('t/delete', get_string('delete')),
+            'class' => 'text-danger',
+            'title' => get_string('delete'),
+            'onclick' => "return confirm('" . get_string('deleteevaluationconfirm', 'mod_paper') . "');",
+        ];
 
-        $table->data[] = [
-            $eval->id,
-            $eval->studentnametext,
-            $eval->totalgrade,
-            $viewlink . $downloadlink . $deletelink
+        $templatecontext['evaluations'][] = [
+            'id' => $eval->id,
+            'studentname' => $eval->studentnametext,
+            'totalgrade' => $eval->totalgrade,
+            'actions' => $actions,
         ];
     }
-    
-    echo html_writer::table($table);
 }
 
-// Button to generate combined PDF
-$downloadurl = moodle_url::make_pluginfile_url($context->id, 'mod_paper', 'downloadevaluations', 0, '/', 'evaluations.pdf');
-$reevaluateurl = new moodle_url('/mod/paper/re_evaluate.php', ['id' => $cm->id, 'sesskey' => sesskey()]);
-$deleteallurl = new moodle_url('/mod/paper/delete_all_evals.php', ['id' => $cm->id, 'sesskey' => sesskey()]);
+// Check if there are any files in the submissions area (waiting to be processed)
+$fs = get_file_storage();
+$hassubmissions = false;
+$files = $fs->get_area_files($context->id, 'mod_paper', 'submissions', 0, 'itemid, filepath, filename', false);
+if (!empty($files)) {
+    $hassubmissions = true;
+}
 
-$buttons = html_writer::link($downloadurl, 'View All Combined PDFs', ['class' => 'btn btn-primary mr-2', 'target' => '_blank']);
-$buttons .= html_writer::link($reevaluateurl, 'Re-evaluate All', ['class' => 'btn btn-warning mr-2', 'onclick' => "return confirm('Are you sure you want to clear all existing grammar corrections and re-evaluate them?');"]);
-$buttons .= html_writer::link($deleteallurl, 'Delete All Submissions', ['class' => 'btn btn-danger', 'onclick' => "return confirm('Are you sure you want to delete ALL evaluations? This cannot be undone.');"]);
+// Only poll if we are actually waiting for evaluations or processing submissions
+if ($templatecontext['pendingoverall'] || $hassubmissions) {
+    $PAGE->requires->js_call_amd('mod_paper/reports', 'init', [
+        $cm->id,
+        $evalcount,
+        $templatecontext['pendingoverall'],
+    ]);
+}
 
-echo html_writer::tag('div', $buttons, ['class' => 'mt-3 mb-3']);
+// Action buttons
+$templatecontext['actionbuttons'][] = [
+    'url' => moodle_url::make_pluginfile_url($context->id, 'mod_paper', 'downloadevaluations', 0, '/', 'evaluations.pdf')->out(false),
+    'text' => get_string('viewallcombinedpdfs', 'mod_paper'),
+    'class' => 'btn btn-primary',
+    'target' => '_blank',
+];
+$templatecontext['actionbuttons'][] = [
+    'url' => (new moodle_url('/mod/paper/re_evaluate.php', ['id' => $cm->id, 'sesskey' => sesskey()]))->out(false),
+    'text' => get_string('reevaluateall', 'mod_paper'),
+    'class' => 'btn btn-warning',
+    'onclick' => "return confirm('" . get_string('reevaluateallconfirm', 'mod_paper') . "');",
+];
+$templatecontext['actionbuttons'][] = [
+    'url' => (new moodle_url('/mod/paper/delete_all_evals.php', ['id' => $cm->id, 'sesskey' => sesskey()]))->out(false),
+    'text' => get_string('deleteallsubmissions', 'mod_paper'),
+    'class' => 'btn btn-danger',
+    'onclick' => "return confirm('" . get_string('deleteallsubmissionsconfirm', 'mod_paper') . "');",
+];
 
-$viewurl = new moodle_url('/mod/paper/view.php', ['id' => $cm->id]);
-echo html_writer::link($viewurl, 'Return to Top', ['class' => 'btn btn-secondary mt-2 mb-3']);
+echo $OUTPUT->render_from_template('mod_paper/reports_page', $templatecontext);
 
 echo $OUTPUT->footer();

@@ -149,38 +149,42 @@ class openai_handler {
             $prompt .= "- Expected Correct Answer: " . ($area->correctanswer ?: 'Not provided') . "\n";
         }
         $prompt .= "- Max Grade: " . $area->maxgrade . "\n";
-        $prompt .= "- Grading Instructions: " . ($area->gradeinstructions ?: 'No specific instructions provided.') . "\n";
+        $prompt .= "- Grading Mode: " . ($area->gradingmode ?? 'none') . "\n";
+        if (($area->gradingmode ?? 'none') === 'overall') {
+            $prompt .= "- Grading Instructions: " . ($area->gradeinstructions ?: 'No specific instructions provided.') . "\n";
+        }
         $prompt .= "- Grammar Corrections: " . $area->grammarcorrections . "\n";
         $prompt .= "- Feedback Mode: " . ($area->feedbackmode ?? 'none') . "\n";
+        if (($area->feedbackmode ?? 'none') === 'custom') {
+            $prompt .= "- Feedback Instructions: " . ($area->feedbackinstructions ?: 'No specific instructions provided.') . "\n";
+        }
         $prompt .= "- Feedback Language: " . $feedbacklanguage . "\n\n";
 
         $prompt .= "### Evaluation Logic\n";
         $prompt .= "1. Correctness Status: Determine if the answer is 'correct', 'partially correct', or 'incorrect'.\n";
 
+        $prompt .= "2. Grading: Calculate a numerical grade (0 to " . $area->maxgrade . ") based on the status and 'Grading Mode':\n";
+        $prompt .= "   - 'none': Do not calculate a grade (return 0).\n";
+        $prompt .= "   - 'incorrect': Deduct point for each grammar/spelling mistake. Starting from " . $area->maxgrade . ".\n";
+        $prompt .= "   - 'overall': Use the 'Grading Instructions' provided above.\n\n";
+
+        $prompt .= "3. Grammar: If 'Grammar Corrections' is enabled, provide a grammatically corrected version of the text. Do not use markdown like bold or strikethrough, just plain corrected text.\n\n";
+
         $prompt .= "4. Feedback: Provide feedback based on the 'Feedback Mode':\n";
         $prompt .= "   - 'none': DO NOT provide any feedback. Return an empty string.\n";
-        $prompt .= "   - 'grammar': Only provide feedback regarding grammar and language usage.\n";
-        $prompt .= "   - 'incorrect': Only provide feedback if the answer is incorrect or partially correct, explaining the gap.\n";
-        $prompt .= "   - 'overall': Provide general helpful feedback regardless of correctness.\n";
+        $prompt .= "   - 'grammatical': Explain grammatical and spelling errors found in the student response.\n";
+        $prompt .= "   - 'custom': Use the 'Feedback Instructions' provided above.\n";
         $prompt .= "   This MUST be written in " . $feedbacklanguage . ".\n\n";
 
         if ($area->correctanswermode === 'relevant') {
             $prompt .= "   - Mode 'relevant': Check if the response is relevant to the question. 'relevant' -> correct, 'not relevant' -> incorrect.\n";
-        } else if ($area->correctanswermode === 'exactly') {
-            $prompt .= "   - Mode 'exactly': Exact match -> correct. Similar but with minor errors (e.g., grammar) -> partially correct. Mismatch -> incorrect.\n";
+        } else if ($area->correctanswermode === 'manual') {
+            $prompt .= "   - Mode 'manual': The response should match the 'Expected Correct Answer' closely. Minor spelling/grammar errors are acceptable for 'partially correct'.\n";
         } else if ($area->correctanswermode === 'samemeaning') {
-            $prompt .= "   - Mode 'samemeaning': Semantic match -> correct. Partial semantic match -> partially correct. Mismatch -> incorrect.\n";
+            $prompt .= "   - Mode 'samemeaning': The response must have the same semantic meaning as the 'Expected Correct Answer', even if phrased differently.\n";
         } else {
             $prompt .= "   - No specific correctness criteria provided. Use your best judgment based on the question and instructions.\n";
         }
-
-        $prompt .= "2. Grading: Calculate a numerical grade (0 to " . $area->maxgrade . ") based on the status and 'Grading Instructions'. Note that the placeholder '{maxgrade}' in instructions refers to " . $area->maxgrade . ".\n";
-
-        if ($area->grammarcorrections !== 'no') {
-            $prompt .= "3. Grammar: Provide a grammatically corrected version of the text. Do not use markdown like bold or strikethrough, just plain corrected text.\n";
-        }
-
-        $prompt .= "4. Feedback: Provide short, helpful feedback explaining the score. This MUST be written in " . $feedbacklanguage . ".\n\n";
 
         $prompt .= "### Input Responses (JSON format: {id: ocrtext})\n";
         $prompt .= json_encode($items) . "\n\n";

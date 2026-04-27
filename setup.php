@@ -33,6 +33,8 @@ if ($_POST && isset($_POST['sesskey']) && confirm_sesskey() && empty($_FILES['te
     $cam = optional_param_array('correctanswermode', [], PARAM_ALPHANUMEXT);
     $gc = optional_param_array('grammarcorrections', [], PARAM_ALPHANUMEXT);
     $fm = optional_param_array('feedbackmode', [], PARAM_ALPHANUMEXT);
+    $fi = optional_param_array('feedbackinstructions', [], PARAM_RAW);
+    $gm = optional_param_array('gradingmode', [], PARAM_ALPHANUMEXT);
     $mgrade = optional_param_array('maxgrade', [], PARAM_FLOAT);
     $gi = optional_param_array('gradeinstructions', [], PARAM_RAW);
     
@@ -72,6 +74,8 @@ if ($_POST && isset($_POST['sesskey']) && confirm_sesskey() && empty($_FILES['te
         $record->correctanswermode = $cam[$post_id] ?? 'none';
         $record->grammarcorrections = $gc[$post_id] ?? 'no';
         $record->feedbackmode = $fm[$post_id] ?? 'none';
+        $record->feedbackinstructions = $fi[$post_id] ?? '';
+        $record->gradingmode = $gm[$post_id] ?? 'none';
         $record->maxgrade = $mgrade[$post_id] ?? 0;
         $record->gradeinstructions = $gi[$post_id] ?? '';
         $record->box_x = $bx[$post_id] ?? 0;
@@ -83,12 +87,12 @@ if ($_POST && isset($_POST['sesskey']) && confirm_sesskey() && empty($_FILES['te
         if (strpos((string)$post_id, 'new') !== false) {
             $DB->insert_record('paper_response_areas', $record);
         } else {
-            $record->id = $post_id;
+            $record->id = (int)$post_id;
             $DB->update_record('paper_response_areas', $record);
         }
     }
     
-    \core\notification::success("Area configurations saved successfully.");
+    \core\notification::success(get_string('area_configurations_saved', 'mod_paper'));
     redirect(new moodle_url('/mod/paper/setup.php', ['id' => $cm->id]));
 }
 
@@ -190,11 +194,11 @@ $contextdata = [
     'responseareas' => []
 ];
 
-// Load image base64 if exists
+// Load image URL if exists
 $fs = get_file_storage();
 $file = $fs->get_file($context->id, 'mod_paper', 'template', 0, '/', 'template.jpg');
 if ($file) {
-    $contextdata['imagebase64'] = base64_encode($file->get_content());
+    $contextdata['imageurl'] = moodle_url::make_pluginfile_url($context->id, 'mod_paper', 'template', 0, '/', 'template.jpg')->out(false);
 }
 
 $areas = $DB->get_records('paper_response_areas', ['paperid' => $paper->id], 'responsenumber ASC');
@@ -204,12 +208,12 @@ if (!empty($areas)) {
         $contextdata['responseareas'][] = [
             'id' => $area->id,
             'responsenumber' => $area->responsenumber,
-            'box_x' => $area->box_x,
-            'box_y' => $area->box_y,
-            'box_w' => $area->box_w,
-            'box_h' => $area->box_h,
+            'box_x' => (float)$area->box_x,
+            'box_y' => (float)$area->box_y,
+            'box_w' => (float)$area->box_w,
+            'box_h' => (float)$area->box_h,
             'isnamefield' => $area->isnamefield,
-            'namefield_none' => ($area->isnamefield == 0),
+            'namefield_standard' => ($area->isnamefield == 0),
             'namefield_fullname' => ($area->isnamefield == 1),
             'namefield_username' => ($area->isnamefield == 2),
             'namefield_displayonly' => ($area->isnamefield == 3),
@@ -220,28 +224,44 @@ if (!empty($areas)) {
             'correctanswermode_exactly' => ($area->correctanswermode === 'exactly'),
             'correctanswermode_relevant' => ($area->correctanswermode === 'relevant'),
             'correctanswermode_samemeaning' => ($area->correctanswermode === 'samemeaning'),
+            'correctanswermode_manual' => ($area->correctanswermode === 'manual'),
+            'show_correctanswer' => ($area->correctanswermode === 'manual' || $area->correctanswermode === 'samemeaning'),
             'grammarcorrections' => $area->grammarcorrections,
             'grammarcorrections_no' => ($area->grammarcorrections === 'no'),
             'grammarcorrections_major' => ($area->grammarcorrections === 'major'),
             'grammarcorrections_all' => ($area->grammarcorrections === 'all'),
-            'feedbackmode' => $area->feedbackmode ?? 'none',
-            'feedbackmode_none' => (($area->feedbackmode ?? 'none') === 'none'),
-            'feedbackmode_grammar' => (($area->feedbackmode ?? 'none') === 'grammar'),
-            'feedbackmode_incorrect' => (($area->feedbackmode ?? 'none') === 'incorrect'),
-            'feedbackoverall' => (($area->feedbackmode ?? 'none') === 'overall'), // Compatibility if needed
-            'feedbackmode_overall' => (($area->feedbackmode ?? 'none') === 'overall'),
-            'maxgrade' => ($area->maxgrade !== null) ? round($area->maxgrade, 2) + 0 : 0,
+            'feedbackmode' => $area->feedbackmode,
+            'feedbackinstructions' => $area->feedbackinstructions,
+            'gradingmode' => $area->gradingmode,
             'gradeinstructions' => $area->gradeinstructions,
+            'feedbackmode_none' => ($area->feedbackmode == 'none'),
+            'feedbackmode_grammatical' => ($area->feedbackmode == 'grammatical'),
+            'feedbackmode_custom' => ($area->feedbackmode == 'custom'),
+            'feedbackmode_overall' => ($area->feedbackmode == 'overall'),
+            'gradingmode_none' => ($area->gradingmode == 'none'),
+            'gradingmode_incorrect' => ($area->gradingmode == 'incorrect'),
+            'gradingmode_overall' => ($area->gradingmode == 'overall'),
+            'maxgrade' => ($area->maxgrade !== null) ? round($area->maxgrade, 2) + 0 : 0,
         ];
     }
     
-    // Pass json array for Javascript box drawing
+    // Pass json array for Javascript box drawing (via hidden field in template)
     $contextdata['responseareas_json'] = json_encode($contextdata['responseareas']);
 }
 
+$PAGE->set_title(get_string('setuptemplate', 'mod_paper'));
+$PAGE->set_heading(format_string($course->fullname));
+
 echo $OUTPUT->header();
-echo $OUTPUT->heading("Setup Template for: " . format_string($paper->name));
+echo $OUTPUT->heading(get_string('setuptemplatefor', 'mod_paper', format_string($paper->name)));
+
+echo $OUTPUT->box(get_string('setup_help', 'mod_paper'), 'info mb-3');
 
 echo $OUTPUT->render_from_template('mod_paper/setup', $contextdata);
+
+// Initialize JS with minimal params to avoid "Too much data" warning.
+$PAGE->requires->js_call_amd('mod_paper/setup', 'init', [
+    ['cmid' => $cm->id]
+]);
 
 echo $OUTPUT->footer();

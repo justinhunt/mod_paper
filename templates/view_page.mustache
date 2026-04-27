@@ -1,0 +1,28 @@
+<div class="mod_paper_view_page">
+    {{#ismanager}}
+        <div class="generalbox">
+            {{^hasareas}}
+                <div class="alert alert-warning">
+                    {{#str}}setupnotcomplete, mod_paper{{/str}}
+                </div>
+                <a href="{{setupurl}}" class="btn btn-primary">{{#str}}viewsetup, mod_paper{{/str}}</a>
+            {{/hasareas}}
+            {{#hasareas}}
+                <div class="mb-3">
+                    <a href="{{setupurl}}" class="btn btn-secondary mr-2">{{#str}}viewsetup, mod_paper{{/str}}</a>
+                    <a href="{{processurl}}" class="btn btn-primary mr-2">{{#str}}uploadsubmissions, mod_paper{{/str}}</a>
+                    <a href="{{reportsurl}}" class="btn btn-info mr-2">{{#str}}viewreports, mod_paper{{/str}}</a>
+                    <a href="{{presetsurl}}" class="btn btn-outline-primary">{{#str}}managepresets, mod_paper{{/str}}</a>
+                </div>
+                <p class="mt-3">
+                    {{#str}}totalevaluationsprocessed, mod_paper, {{evalcount}}{{/str}}
+                </p>
+            {{/hasareas}}
+        </div>
+    {{/ismanager}}
+    {{^ismanager}}
+        <div class="box p-3 border rounded bg-light">
+            {{#str}}studentviewmessage, mod_paper{{/str}}
+        </div>
+    {{/ismanager}}
+</div>

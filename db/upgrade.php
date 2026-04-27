@@ -90,5 +90,58 @@ function xmldb_paper_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2024042701, 'paper');
     }
 
+    if ($oldversion < 2024042702) {
+
+        // Define field gradingmode to be added to paper_response_areas.
+        $table = new xmldb_table('paper_response_areas');
+        $field = new xmldb_field('gradingmode', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'none', 'feedbackmode');
+
+        // Conditionally launch add field gradingmode.
+        if (!$dbman->field_exists($table, $field)) {
+            $dbman->add_field($table, $field);
+        }
+
+        // Define field feedbackinstructions to be added to paper_response_areas.
+        $field2 = new xmldb_field('feedbackinstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'gradingmode');
+
+        // Conditionally launch add field feedbackinstructions.
+        if (!$dbman->field_exists($table, $field2)) {
+            $dbman->add_field($table, $field2);
+        }
+
+        // Paper savepoint reached.
+        upgrade_mod_savepoint(true, 2024042702, 'paper');
+    }
+
+    if ($oldversion < 2024042704) {
+
+        // Define field feedbackmode to be added to paper_response_areas.
+        $table = new xmldb_table('paper_response_areas');
+
+        // Define fields to check/add.
+        $fields = [
+            'feedbackmode' => new xmldb_field('feedbackmode', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'none', 'grammarcorrections'),
+            'gradingmode' => new xmldb_field('gradingmode', XMLDB_TYPE_CHAR, '20', null, XMLDB_NOTNULL, null, 'none', 'feedbackmode'),
+            'feedbackinstructions' => new xmldb_field('feedbackinstructions', XMLDB_TYPE_TEXT, null, null, null, null, null, 'gradingmode')
+        ];
+
+        foreach ($fields as $name => $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        // Define field showtotalscore to be added to paper.
+        $table2 = new xmldb_table('paper');
+        $field2 = new xmldb_field('showtotalscore', XMLDB_TYPE_INTEGER, '2', null, XMLDB_NOTNULL, null, '1', 'timemodified');
+
+        if (!$dbman->field_exists($table2, $field2)) {
+            $dbman->add_field($table2, $field2);
+        }
+
+        // Paper savepoint reached.
+        upgrade_mod_savepoint(true, 2024042704, 'paper');
+    }
+
     return true;
 }

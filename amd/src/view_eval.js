@@ -1,7 +1,14 @@
-define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Ajax, Notification, Str) {
+define(['jquery', 'core/ajax', 'core/notification', 'core/str', 'core/log'], function($, Ajax, Notification, Str, log) {
+    "use strict";
+
+    var component = 'mod_paper';
+
     return {
+        strings: {},
+
         init: function(cmid, evalid, maxpossible) {
-            console.log('mod_paper view_eval init:', cmid, evalid, maxpossible);
+            var dd = this;
+            this.setup_strings();
 
             $('.eval-item-area').on('click', function() {
                 var area = $(this);
@@ -14,7 +21,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
                 var grade = area.data('grade');
                 var areaNum = area.data('responsenumber');
 
-                // Fill form
+                // Fill form.
                 $('#field-itemid').val(itemId);
                 $('#field-areaid').val(areaId);
                 $('#field-grade').val(grade);
@@ -23,7 +30,7 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
                 $('#field-feedback').val(feedback);
                 $('#sidebar-area-num').text(areaNum ? '#' + areaNum : '');
 
-                // Toggle fields for name field
+                // Toggle fields for name field.
                 if (isNameField) {
                     $('#group-grade').hide();
                     $('#group-feedback').hide();
@@ -33,8 +40,8 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
                 }
 
                 $('#edit-sidebar').show();
-                
-                // Highlight active area
+
+                // Highlight active area.
                 $('.eval-item-area').css('outline', '2px solid blue');
                 area.css('outline', '4px solid red');
             });
@@ -46,65 +53,73 @@ define(['jquery', 'core/ajax', 'core/notification', 'core/str'], function($, Aja
 
             $('#edit-item-form').on('submit', function(e) {
                 e.preventDefault();
-                
-                var formData = {
-                    itemid: $('#field-itemid').val(),
-                    areaid: $('#field-areaid').val(),
-                    grade: $('#field-grade').val(),
-                    correctedtext: $('#field-correctedtext').val(),
-                    feedback: $('#field-feedback').val(),
-                    evalid: evalid,
+
+                var args = {
                     cmid: cmid,
-                    sesskey: M.cfg.sesskey
+                    evalid: evalid,
+                    areaid: parseInt($('#field-areaid').val(), 10),
+                    itemid: parseInt($('#field-itemid').val(), 10) || 0,
+                    grade: parseFloat($('#field-grade').val()) || null,
+                    correctedtext: $('#field-correctedtext').val(),
+                    feedback: $('#field-feedback').val()
                 };
 
-                $('#btn-save-item').prop('disabled', true).text('Saving...');
+                $('#btn-save-item').prop('disabled', true).text(dd.strings.saving);
 
-                var url = M.cfg.wwwroot + '/mod/paper/ajax_update_eval.php?' + $.param(formData);
+                Ajax.call([{
+                    methodname: 'mod_paper_update_eval_item',
+                    args: args
+                }])[0].then(function(result) {
+                    $('#btn-save-item').prop('disabled', false).text(dd.strings.savechanges);
 
-                fetch(url)
-                    .then(response => response.json())
-                    .then(result => {
-                        $('#btn-save-item').prop('disabled', false).text('Save Changes');
-                        
-                        if (result.success) {
-                            // Update the area HTML
-                            var areaId = '#item_area_' + formData.areaid;
-                            $(areaId).html(result.newhtml);
-                            
-                            // Update data attributes
-                            $(areaId).data('item-id', result.itemid);
-                            $(areaId).data('corrected', formData.correctedtext);
-                            $(areaId).data('feedback', formData.feedback);
-                            $(areaId).data('grade', formData.grade);
-                            $(areaId).attr('data-item-id', result.itemid); // Ensure attribute is updated too
-                            
-                            // Update badge
-                            var badgeId = '#item_grade_badge_' + formData.areaid;
-                            if (formData.grade !== '' && !$(areaId).data('is-name-field')) {
-                                $(badgeId).text(formData.grade).show();
-                            } else {
-                                $(badgeId).hide();
-                            }
+                    if (result.success) {
+                        // Update the area HTML.
+                        var areaId = '#item_area_' + args.areaid;
+                        $(areaId).html(result.newhtml);
 
-                            // Update total grade
-                            $('#total-grade-display').text(result.totalgrade + ' / ' + maxpossible);
-                            
-                            Notification.addNotification({
-                                message: 'Changes saved successfully',
-                                type: 'success'
-                            });
-                            
-                            $('#edit-sidebar').hide();
-                            $('.eval-item-area').css('outline', '2px solid blue');
-                        } else {
-                            Notification.alert('Error', result.error || 'Failed to save changes', 'OK');
-                        }
-                    })
-                    .catch(error => {
-                        $('#btn-save-item').prop('disabled', false).text('Save Changes');
-                        Notification.exception(error);
-                    });
+                        // Update data attributes.
+                        $(areaId).data('item-id', result.itemid);
+                        $(areaId).data('corrected', args.correctedtext);
+                        $(areaId).data('feedback', args.feedback);
+                        $(areaId).data('grade', args.grade);
+                        $(areaId).attr('data-item-id', result.itemid);
+
+                        // Update total grade.
+                        $('#total-grade-display').text(result.totalgrade + ' / ' + maxpossible);
+
+                        Notification.addNotification({
+                            message: dd.strings.changessaved,
+                            type: 'success'
+                        });
+
+                        $('#edit-sidebar').hide();
+                        $('.eval-item-area').css('outline', '2px solid blue');
+                    } else {
+                        Notification.alert(dd.strings.error, result.error || dd.strings.failedtosave, dd.strings.ok);
+                    }
+                }).catch(function(ex) {
+                    log.error('Error saving item:', ex);
+                });
+            });
+        },
+
+        setup_strings: function() {
+            var dd = this;
+            Str.get_strings([
+                {key: 'savechanges', component: component},
+                {key: 'saving', component: component},
+                {key: 'changessaved', component: component},
+                {key: 'error', component: component},
+                {key: 'failedtosave', component: component},
+                {key: 'ok', component: component}
+            ]).done(function(s) {
+                var i = 0;
+                dd.strings.savechanges = s[i++];
+                dd.strings.saving = s[i++];
+                dd.strings.changessaved = s[i++];
+                dd.strings.error = s[i++];
+                dd.strings.failedtosave = s[i++];
+                dd.strings.ok = s[i++];
             });
         }
     };

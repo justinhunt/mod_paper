@@ -1,0 +1,94 @@
+<div class="mod_paper_view_eval">
+    <div class="d-flex justify-content-between mb-3">
+        <div class="prev-student">
+            {{#pagination.prevurl}}
+                <a href="{{pagination.prevurl}}" class="btn btn-secondary">&laquo; {{#str}}previousstudent, mod_paper{{/str}}</a>
+            {{/pagination.prevurl}}
+        </div>
+        <a href="{{pagination.backurl}}" class="btn btn-outline-primary">{{#str}}returntoreports, mod_paper{{/str}}</a>
+        <div class="next-student">
+            {{#pagination.nexturl}}
+                <a href="{{pagination.nexturl}}" class="btn btn-secondary">{{#str}}nextstudent, mod_paper{{/str}} &raquo;</a>
+            {{/pagination.nexturl}}
+        </div>
+    </div>
+
+    {{#hastemplate}}
+    <div class="d-flex flex-wrap" id="view-eval-page-wrapper" style="max-width: 1200px; margin: 0 auto; align-items: flex-start;">
+        <!-- Left side: Template -->
+        <div id="template-container" style="position: relative; flex: 1; min-width: 600px; border: 1px solid #ccc; background: #eee;">
+            <img src="{{imageurl}}" style="width: 100%; height: auto; display: block;">
+            
+            {{#areas}}
+                <div class="eval-item-area" 
+                     id="item_area_{{id}}" 
+                     style="{{style}}"
+                     data-item-id="{{itemid}}"
+                     data-area-id="{{id}}"
+                     data-is-name-field="{{isnamefield}}"
+                     data-ocr="{{ocr}}"
+                     data-corrected="{{corrected}}"
+                     data-feedback="{{feedback}}"
+                     data-grade="{{grade}}"
+                     data-responsenumber="{{responsenumber}}">
+                    
+                    {{> mod_paper/eval_item_content }}
+                </div>
+            {{/areas}}
+
+            {{#showtotalscore}}
+                <div style="{{scorestyle}}">
+                    {{#str}}totalscore, mod_paper{{/str}}: <span id="total-grade-display">{{scoredisplay}}</span>
+                </div>
+            {{/showtotalscore}}
+        </div>
+
+        <!-- Right side: Sidebar form -->
+        <div id="edit-sidebar" style="width: 350px; padding: 20px; border-left: 1px solid #ccc; background: #f9f9f9; display: none; transition: all 0.3s ease; box-shadow: -2px 0 5px rgba(0,0,0,0.1);">
+            <h4 class="mb-3">{{#str}}editresponse, mod_paper{{/str}} <span id="sidebar-area-num"></span></h4>
+            <form id="edit-item-form">
+                <input type="hidden" name="itemid" id="field-itemid">
+                <input type="hidden" name="areaid" id="field-areaid">
+                
+                <div class="form-group" id="group-grade">
+                    <label>{{#str}}grade, mod_paper{{/str}}</label>
+                    <input type="number" step="0.5" name="grade" id="field-grade" class="form-control">
+                </div>
+
+                <div class="form-group">
+                    <label>{{#str}}originaltextreadonly, mod_paper{{/str}}</label>
+                    <div id="field-ocr-readonly" class="p-2 border rounded bg-white" style="min-height: 50px; font-style: italic; color: #666;"></div>
+                </div>
+
+                <div class="form-group">
+                    <label>{{#str}}correctedtext, mod_paper{{/str}}</label>
+                    <textarea name="correctedtext" id="field-correctedtext" class="form-control" rows="4"></textarea>
+                </div>
+
+                <div class="form-group" id="group-feedback">
+                    <label>{{#str}}feedback, mod_paper{{/str}}</label>
+                    <textarea name="feedback" id="field-feedback" class="form-control" rows="3"></textarea>
+                </div>
+
+                <button type="submit" class="btn btn-primary btn-block" id="btn-save-item">{{#str}}savechanges, mod_paper{{/str}}</button>
+                <button type="button" class="btn btn-link btn-block" id="btn-cancel-edit">{{#str}}cancel, mod_paper{{/str}}</button>
+            </form>
+        </div>
+    </div>
+    {{/hastemplate}}
+
+    {{^hastemplate}}
+        <div class="alert alert-warning">
+            {{#str}}templatenotfound, mod_paper{{/str}}
+        </div>
+    {{/hastemplate}}
+
+    <div class="mt-3 mb-3 d-block text-center">
+        <a href="{{pagination.backurl}}" class="btn btn-secondary">{{#str}}returntotop, mod_paper{{/str}}</a>
+    </div>
+</div>
+
+<style>
+    .eval-item-area:hover { outline: 4px solid red !important; background-color: rgba(255, 0, 0, 0.1) !important; z-index: 20; }
+    .eval-item-area { transition: outline 0.2s ease; }
+</style>
