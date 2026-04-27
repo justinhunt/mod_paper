@@ -1,31 +1,29 @@
 # Paper Module (mod_paper)
 
-Paper is a Moodle activity module designed to bridge the gap between traditional paper-based student work and digital grading. It allows teachers to create custom response templates, scan student handwriting, and use AI-powered OCR and grammar correction to streamline the evaluation process.
+Paper is a Moodle activity module that allows the teacher to distribute paper assignments, which are later scanned, evaluated by AI, and the results printed to paper for return to students. It allows teachers to use AI to speed up manual grading and does not require students to use a computer or log in to Moodle.
 
 ## Features
 
-- **Custom Template Designer**: Define specific response areas on a PDF template.
+- **Custom Template Designer**: Define specific response areas on a blank PDF worksheet.
 - **AI-Powered OCR**: Automatically extracts student handwriting from scanned documents.
-- **Grammar Correction**: Integrates with LLMs to provide automated feedback and "arrows-to" correction overlays.
+- **Grammar Correction**: Integrates with LLMs to provide automated feedback and grammar correction.
 - **Manual Grading Sidebar**: Easily review student work, adjust grades, and provide specific feedback.
-- **"Display Only" Snippets**: Capture and display original handwriting/marks (e.g., for multiple choice or drawing questions) without OCR.
+- **"Display Only" Snippets**: Retain worksheet elements that are necessary but do not need OCR (e.g. for multiple choice questions or drawings).
 - **PDF Evaluation Reports**: Generate high-quality PDF reports for students showing their original work with digital overlays.
-- **Gradebook Integration**: Automatically syncs total scores back to the Moodle gradebook.
+- **Gradebook Integration**: Automatically syncs total scores back to the Moodle gradebook. (optional)
 
 ## Workflow
 
-1. **Setup**: Define your response areas on the template (Full Name, Username, Standard, or Display Only).
-2. **Print**: Download the generated PDF template and distribute it to students.
-3. **Scan**: Collect and scan the completed student papers as a single PDF.
-4. **Process**: Upload the scanned PDF to the activity. The system will unroll the pages and perform OCR.
-5. **Evaluate**: Review the results in the Evaluation Report. Use the interactive sidebar to verify AI corrections and assign manual grades.
-6. **Report**: Share the digital evaluations with students or download the combined PDF report.
+1. **Setup**: Upload a blank worksheet ( PDF or JPG) to the activity. Mark up the response areas on the worksheet by dragging your mouse over them, and setting grading, maximum score and other criteria.
+2. **Scan**: Collect and scan the completed student worksheets as a single multipage PDF, or as multuple PDFs.
+3. **Process**: Upload the scanned PDF(s) to the activity. The system will assume one page per student submission and perform OCR. It will then perform an evaluation. This will take place during the Moodle cron and may take a minute or two.
+4. **Evaluate**: Review the results in the Evaluation Report. Use the interactive sidebar to verify AI corrections and grades, and optionally adjust them.
+5. **Report**: Print combined PDF report and return evaluations to students.
 
 ## Technical Requirements
 
 - **Ghostscript**: Required for PDF to Image conversion during processing.
-- **AI API**: Configured in the plugin settings for text extraction.
-- **Grammar API**: Configured for automated correction logic.
+- **Open AI API Key**: For OCR and evaluation.
 - **File Storage**: Uses Moodle's File API to store template snippets and evaluation reports.
 
 ## Installation
