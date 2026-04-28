@@ -67,33 +67,46 @@ class external_api extends \core_external\external_api {
 
         $paper = $DB->get_record('paper', ['id' => $cm->instance], '*', MUST_EXIST);
 
-        $response = [
-            'complete' => true,
-            'count' => 0,
-        ];
-
         $evals = $DB->get_records('paper_evaluations', ['paperid' => $paper->id]);
-        $response['count'] = count($evals);
+        $count = count($evals);
 
-        foreach ($evals as $eval) {
-            $sql = "SELECT COUNT(pei.id) 
-                    FROM {paper_eval_items} pei
-                    JOIN {paper_response_areas} pra ON pra.id = pei.responseareaid
-                    WHERE pei.evalid = :evalid 
-                      AND pra.isnamefield = 0 
-                      AND pei.correctedtext = '' 
-                      AND pra.grammarcorrections != 'no'";
-            if ($DB->count_records_sql($sql, ['evalid' => $eval->id]) > 0) {
-                $response['complete'] = false;
+        // Check for queued background tasks — the definitive "still processing" signal.
+        $taskclasses = [
+            '\\mod_paper\\task\\process_submissions_task',
+            '\\mod_paper\\task\\evaluate_submissions_task',
+        ];
+        $hastask = false;
+        foreach ($taskclasses as $taskclass) {
+            $sql = "SELECT COUNT(id) FROM {task_adhoc} WHERE classname = :classname";
+            if ($DB->count_records_sql($sql, ['classname' => $taskclass]) > 0) {
+                $hastask = true;
                 break;
             }
         }
 
-        if ($response['count'] != $params['currentcount']) {
-            $response['complete'] = false;
+        // Also check for any eval items still awaiting grammar correction.
+        $pendingitems = false;
+        foreach ($evals as $eval) {
+            $sql = "SELECT COUNT(pei.id)
+                    FROM {paper_eval_items} pei
+                    JOIN {paper_response_areas} pra ON pra.id = pei.responseareaid
+                    WHERE pei.evalid = :evalid
+                      AND pra.isnamefield = 0
+                      AND pei.correctedtext = ''
+                      AND pra.grammarcorrections != 'no'";
+            if ($DB->count_records_sql($sql, ['evalid' => $eval->id]) > 0) {
+                $pendingitems = true;
+                break;
+            }
         }
 
-        return $response;
+        // Complete only when no tasks queued and no items pending.
+        $complete = !$hastask && !$pendingitems;
+
+        return [
+            'complete' => $complete,
+            'count' => $count,
+        ];
     }
 
     /**
@@ -196,30 +209,22 @@ class external_api extends \core_external\external_api {
             paper_grade_item_update($paper, $grades);
         }
 
-        // Build HTML context
+        // Build HTML context.
         if ($item->correctedtext !== '' && $area->grammarcorrections !== 'no' && !$area->isnamefield) {
             $displayhtml = \mod_paper\utils::build_combined_diff($item->ocrtext, $item->correctedtext);
         } else {
             $displayhtml = htmlspecialchars($item->correctedtext !== '' ? $item->correctedtext : $item->ocrtext);
         }
 
-        $feedbackhtml = null;
-        $feedbackstyle = null;
-        if (!empty($item->feedback) && !$area->isnamefield) {
-            $feedbackfontcss = \mod_paper\utils::get_css_font_family($paper->feedbacklanguagefont ?? 'freesans');
-            $feedbackhtml = get_string('feedbacklabel', 'mod_paper', htmlspecialchars($item->feedback));
-            $feedbackstyle = 'position: absolute; bottom: 4px; left: 4px; right: 4px; font-family: ' . $feedbackfontcss . '; font-size: 0.7em; font-weight: normal; color: #666; background: rgba(255,255,255,0.8); line-height: 1.2; max-height: 30%; overflow: hidden;';
-        }
-
         $gradestyle = null;
         if ($item->itemgrade !== null && !$area->isnamefield) {
-            $gradestyle = 'position: absolute; top: -20px; right: -25px; font-weight: bold; font-size: 2em; color: green; z-index: 30; background: white; border: 1px solid green; padding: 2px 6px; border-radius: 4px;';
+            $gradestyle = 'position: absolute; top: -20px; right: -25px; font-weight: bold; ' .
+                'font-size: 2em; color: green; z-index: 30; background: white; ' .
+                'border: 1px solid green; padding: 2px 6px; border-radius: 4px;';
         }
 
         $rendercontext = [
             'displayhtml' => $displayhtml,
-            'feedbackhtml' => $feedbackhtml,
-            'feedbackstyle' => $feedbackstyle,
             'gradehtml' => ($item->itemgrade !== null && !$area->isnamefield),
             'gradestyle' => $gradestyle,
             'grade' => (round($item->itemgrade, 2) + 0),

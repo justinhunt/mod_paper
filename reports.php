@@ -53,14 +53,21 @@ $templatecontext = [
     'returntotopurl' => (new moodle_url('/mod/paper/view.php', ['id' => $cm->id]))->out(false),
 ];
 
+// Check if any gradable areas exist for this paper (gradingmode != 'none').
+$hasgradeareas = $DB->record_exists_select(
+    'paper_response_areas',
+    "paperid = :paperid AND isnamefield = 0 AND gradingmode != 'none'",
+    ['paperid' => $paper->id]
+);
+
 if (!empty($evaluations)) {
     foreach ($evaluations as $eval) {
         $viewurl = new moodle_url('/mod/paper/view_eval.php', ['id' => $cm->id, 'evalid' => $eval->id]);
         $deleteurl = new moodle_url('/mod/paper/delete_eval.php', ['id' => $cm->id, 'evalid' => $eval->id, 'sesskey' => sesskey()]);
         $individualdownloadurl = moodle_url::make_pluginfile_url($context->id, 'mod_paper', 'downloadevaluations', $eval->id, '/', 'evaluation.pdf');
 
-        // Check if evaluation is pending
-        $sql = "SELECT COUNT(pei.id) 
+        // Check if evaluation is pending.
+        $sql = "SELECT COUNT(pei.id)
                 FROM {paper_eval_items} pei
                 JOIN {paper_response_areas} pra ON pra.id = pei.responseareaid
                 WHERE pei.evalid = :evalid AND pra.isnamefield = 0 AND pei.correctedtext = '' AND pra.grammarcorrections != 'no'";
@@ -104,47 +111,64 @@ if (!empty($evaluations)) {
         $templatecontext['evaluations'][] = [
             'id' => $eval->id,
             'studentname' => $eval->studentnametext,
-            'totalgrade' => $eval->totalgrade,
+            'totalgrade' => $hasgradeareas ? $eval->totalgrade : '',
             'actions' => $actions,
         ];
     }
 }
 
-// Check if there are any files in the submissions area (waiting to be processed)
-$fs = get_file_storage();
-$hassubmissions = false;
-$files = $fs->get_area_files($context->id, 'mod_paper', 'submissions', 0, 'itemid, filepath, filename', false);
-if (!empty($files)) {
-    $hassubmissions = true;
+// Detect if any background processing tasks are queued for this paper.
+// This is the definitive signal — catches re-evaluate, fresh uploads, etc.
+$taskclasses = [
+    '\\mod_paper\\task\\process_submissions_task',
+    '\\mod_paper\\task\\evaluate_submissions_task',
+];
+$hastask = false;
+foreach ($taskclasses as $taskclass) {
+    $sql = "SELECT COUNT(id) FROM {task_adhoc} WHERE classname = :classname";
+    if ($DB->count_records_sql($sql, ['classname' => $taskclass]) > 0) {
+        $hastask = true;
+        break;
+    }
 }
 
-// Only poll if we are actually waiting for evaluations or processing submissions
-if ($templatecontext['pendingoverall'] || $hassubmissions) {
+// Poll whenever there is a queued task OR pending eval items.
+$shouldpoll = $hastask || $templatecontext['pendingoverall'];
+if ($shouldpoll) {
     $PAGE->requires->js_call_amd('mod_paper/reports', 'init', [
         $cm->id,
         $evalcount,
-        $templatecontext['pendingoverall'],
+        $templatecontext['pendingoverall'] || $hastask,
     ]);
 }
 
-// Action buttons
+// Action buttons — disabled when there is nothing to act on.
+$nodata = empty($evaluations);
+$disabledtitle = $nodata ? get_string('noevaluationsyet', 'mod_paper') : '';
+
 $templatecontext['actionbuttons'][] = [
     'url' => moodle_url::make_pluginfile_url($context->id, 'mod_paper', 'downloadevaluations', 0, '/', 'evaluations.pdf')->out(false),
     'text' => get_string('viewallcombinedpdfs', 'mod_paper'),
     'class' => 'btn btn-primary',
     'target' => '_blank',
+    'disabled' => $nodata,
+    'title' => $disabledtitle,
 ];
 $templatecontext['actionbuttons'][] = [
     'url' => (new moodle_url('/mod/paper/re_evaluate.php', ['id' => $cm->id, 'sesskey' => sesskey()]))->out(false),
     'text' => get_string('reevaluateall', 'mod_paper'),
     'class' => 'btn btn-warning',
     'onclick' => "return confirm('" . get_string('reevaluateallconfirm', 'mod_paper') . "');",
+    'disabled' => $nodata,
+    'title' => $disabledtitle,
 ];
 $templatecontext['actionbuttons'][] = [
     'url' => (new moodle_url('/mod/paper/delete_all_evals.php', ['id' => $cm->id, 'sesskey' => sesskey()]))->out(false),
     'text' => get_string('deleteallsubmissions', 'mod_paper'),
     'class' => 'btn btn-danger',
     'onclick' => "return confirm('" . get_string('deleteallsubmissionsconfirm', 'mod_paper') . "');",
+    'disabled' => $nodata,
+    'title' => $disabledtitle,
 ];
 
 echo $OUTPUT->render_from_template('mod_paper/reports_page', $templatecontext);

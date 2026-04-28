@@ -30,10 +30,13 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
             var img = container.find('img');
 
             var onImageLoaded = function() {
+                console.log("Image loaded, creating boxes. Areas:", responseareas);
                 // Draw bounding boxes once image is loaded.
                 if (responseareas && responseareas.length > 0) {
                     responseareas.forEach(function(area) {
+                        console.log("Creating boxes for area:", area.id);
                         dd.createBoxElement(area.id, area.responsenumber, area.box_x, area.box_y, area.box_w, area.box_h);
+                        dd.createFeedbackBoxElement(area.id, area.responsenumber, area.fb_x, area.fb_y, area.fb_w, area.fb_h);
                     });
                     // Select first by default.
                     dd.selectArea(responseareas[0].id);
@@ -59,6 +62,15 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                 }
             });
 
+            $('#setup-form').on('input', '.fb-pos-input', function() {
+                var val = $(this).val();
+                var areaId = $(this).data('area');
+                var attr = $(this).data('attr');
+                if (val !== '') {
+                    $('#fb_box_' + areaId).css(attr, val + '%');
+                }
+            });
+
             // Toggle correct answer textarea based on radio selection.
             $('#setup-form').on('change', '.cam-radio', function() {
                 var areaId = $(this).closest('.area-card').data('area-id');
@@ -78,6 +90,54 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                     $('#feedback_instructions_wrapper_' + areaId).show();
                 } else {
                     $('#feedback_instructions_wrapper_' + areaId).hide();
+                }
+
+
+                if (val === 'none') {
+                    $('#fb_box_' + areaId).hide();
+                    $(this).closest('.area-card').find('.fb-pos-fieldset').hide();
+                } else {
+                    var fbBox = $('#fb_box_' + areaId);
+                    var card = $(this).closest('.area-card');
+
+                    // If feedback coords are unset (all zeros), recalculate from the
+                    // parent box's *current* position so a moved response area gets the
+                    // right default rather than the original creation position.
+                    var fbLeft   = parseFloat(card.find('.fb-pos-input[data-attr="left"]').val()) || 0;
+                    var fbTop    = parseFloat(card.find('.fb-pos-input[data-attr="top"]').val()) || 0;
+                    var fbWidth  = parseFloat(card.find('.fb-pos-input[data-attr="width"]').val()) || 0;
+                    var fbHeight = parseFloat(card.find('.fb-pos-input[data-attr="height"]').val()) || 0;
+
+                    if (fbLeft === 0 && fbTop === 0 && fbWidth === 0 && fbHeight === 0) {
+                        var parentBox = $('#box_' + areaId);
+                        if (parentBox.length) {
+                            var container = $('#image-container');
+                            var cw = container.width();
+                            var ch = container.height();
+                            var px = parseFloat(parentBox.css('left')) / cw * 100;
+                            var py = parseFloat(parentBox.css('top')) / ch * 100;
+                            var pw = parseFloat(parentBox.css('width')) / cw * 100;
+                            var ph = parseFloat(parentBox.css('height')) / ch * 100;
+
+                            var newFbX = px;
+                            var newFbY = py + ph * 0.7;
+                            var newFbW = pw;
+                            var newFbH = ph * 0.3;
+
+                            // Update the visual box.
+                            fbBox.css({left: newFbX + '%', top: newFbY + '%',
+                                       width: newFbW + '%', height: newFbH + '%'});
+
+                            // Sync the numeric inputs so the values are saved correctly.
+                            card.find('.fb-pos-input[data-attr="left"]').val(newFbX.toFixed(1));
+                            card.find('.fb-pos-input[data-attr="top"]').val(newFbY.toFixed(1));
+                            card.find('.fb-pos-input[data-attr="width"]').val(newFbW.toFixed(1));
+                            card.find('.fb-pos-input[data-attr="height"]').val(newFbH.toFixed(1));
+                        }
+                    }
+
+                    fbBox.show();
+                    card.find('.fb-pos-fieldset').show();
                 }
             });
 
@@ -104,9 +164,10 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
             $('.namefield-radio:checked').trigger('change');
 
             // Delete area.
-            $('#setup-form').on('click', '.delete-area', function() {
+            $('#setup-form').on('click', '.btn-trash-area', function() {
                 var areaId = $(this).closest('.area-card').data('area-id');
                 $('#box_' + areaId).remove();
+                $('#fb_box_' + areaId).remove();
                 $(this).closest('.area-card').remove();
                 dd.updateLabels();
             });
@@ -166,7 +227,7 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                     });
                     // Set some defaults.
                     newCard.find('input[name*="[namefieldtype]"][value="0"]').prop('checked', true);
-                    newCard.find('input[name*="[grammarcorrections]"][value="yes"]').prop('checked', true);
+                    newCard.find('input[name*="[grammarcorrections]"][value="major"]').prop('checked', true);
                     newCard.find('input[name*="[feedbackmode]"][value="none"]').prop('checked', true);
                     newCard.find('input[name*="[gradingmode]"][value="none"]').prop('checked', true);
                     newCard.find('.manual-grade-wrapper').hide();
@@ -174,10 +235,17 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                     newCard.find('.feedback-instructions-wrapper').hide();
                     newCard.find('.standard-fields-wrapper').show();
 
+                    // Set default position values (10, 10, 20, 10) so the form saves them correctly.
+                    newCard.find('input[data-attr="left"]').val('10');
+                    newCard.find('input[data-attr="top"]').val('10');
+                    newCard.find('input[data-attr="width"]').val('20');
+                    newCard.find('input[data-attr="height"]').val('10');
+
                     $('#areas-container').append(newCard);
                 }
 
                 dd.createBoxElement(id, num, 10, 10, 20, 10);
+                dd.createFeedbackBoxElement(id, num, 0, 0, 0, 0);
                 dd.selectArea(id);
                 dd.updateLabels();
             });
@@ -245,12 +313,38 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                                 if (name) {
                                     $(this).attr('name', name.replace(/\[[^\]]+\]/, '[' + id + ']'));
                                 }
+                                var oldInputId = $(this).attr('id');
+                                if (oldInputId) {
+                                    $(this).attr('id', oldInputId.replace(/_\d+$/, '_' + id).replace(/_new_\d+$/, '_' + id));
+                                }
                                 if (!$(this).is(':radio')) {
                                     $(this).val('');
                                 } else {
                                     $(this).prop('checked', false);
                                 }
                             });
+                            newCard.find('label').each(function() {
+                                var oldFor = $(this).attr('for');
+                                if (oldFor) {
+                                    $(this).attr('for', oldFor.replace(/_\d+$/, '_' + id).replace(/_new_\d+$/, '_' + id));
+                                }
+                            });
+                            newCard.find('.manual-grade-wrapper, .grade-instructions-wrapper').each(function() {
+                                var oldWrapId = $(this).attr('id');
+                                if (oldWrapId) {
+                                    $(this).attr('id', oldWrapId.replace(/_\d+$/, '_' + id).replace(/_new_\d+$/, '_' + id));
+                                }
+                            });
+                            // Set defaults.
+                            newCard.find('input[name*="[namefieldtype]"][value="0"]').prop('checked', true);
+                            newCard.find('input[name*="[grammarcorrections]"][value="major"]').prop('checked', true);
+                            newCard.find('input[name*="[feedbackmode]"][value="none"]').prop('checked', true);
+                            newCard.find('input[name*="[gradingmode]"][value="none"]').prop('checked', true);
+                            newCard.find('.manual-grade-wrapper').hide();
+                            newCard.find('.grade-instructions-wrapper').hide();
+                            newCard.find('.feedback-instructions-wrapper').hide();
+                            newCard.find('.standard-fields-wrapper').show();
+                            // Set position from drag.
                             newCard.find('input[data-attr="left"]').val(boxX.toFixed(1));
                             newCard.find('input[data-attr="top"]').val(boxY.toFixed(1));
                             newCard.find('input[data-attr="width"]').val(boxW.toFixed(1));
@@ -259,7 +353,9 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                             $('#areas-container').append(newCard);
                         }
 
+
                         dd.createBoxElement(id, num, boxX, boxY, boxW, boxH);
+                        dd.createFeedbackBoxElement(id, num, 0, 0, 0, 0);
                         dd.selectArea(id);
                         dd.updateLabels();
                     }
@@ -276,7 +372,8 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                 {key: 'notconfigured', component: component},
                 {key: 'allconfigured', component: component},
                 {key: 'noneconfigured', component: component},
-                {key: 'nconfigured', component: component}
+                {key: 'nconfigured', component: component},
+                {key: 'feedbackarea', component: component}
             ]).done(function(s) {
                 var i = 0;
                 dd.strings.responsearea = s[i++];
@@ -285,6 +382,7 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                 dd.strings.allconfigured = s[i++];
                 dd.strings.noneconfigured = s[i++];
                 dd.strings.nconfigured = s[i++];
+                dd.strings.feedbackarea = s[i++];
             });
         },
 
@@ -371,15 +469,18 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
 
                     // Update input form percentages.
                     var areaId = boxElement.attr('data-area-id');
+                    var isFeedback = boxElement.hasClass('feedback-box');
+                    var inputPrefix = isFeedback ? 'input.fb-pos-input' : 'input.pos-input';
+
                     var cLeft = parseFloat(boxElement.css('left')) / containerW * 100;
                     var cTop = parseFloat(boxElement.css('top')) / containerH * 100;
                     var cWidth = parseFloat(boxElement.css('width')) / containerW * 100;
                     var cHeight = parseFloat(boxElement.css('height')) / containerH * 100;
 
-                    $('input.pos-input[data-area="' + areaId + '"][data-attr="left"]').val(cLeft.toFixed(1));
-                    $('input.pos-input[data-area="' + areaId + '"][data-attr="top"]').val(cTop.toFixed(1));
-                    $('input.pos-input[data-area="' + areaId + '"][data-attr="width"]').val(cWidth.toFixed(1));
-                    $('input.pos-input[data-area="' + areaId + '"][data-attr="height"]').val(cHeight.toFixed(1));
+                    $(inputPrefix + '[data-area="' + areaId + '"][data-attr="left"]').val(cLeft.toFixed(1));
+                    $(inputPrefix + '[data-area="' + areaId + '"][data-attr="top"]').val(cTop.toFixed(1));
+                    $(inputPrefix + '[data-area="' + areaId + '"][data-attr="width"]').val(cWidth.toFixed(1));
+                    $(inputPrefix + '[data-area="' + areaId + '"][data-attr="height"]').val(cHeight.toFixed(1));
                 });
 
                 $(document).on('mouseup.paperBox', function() {
@@ -394,6 +495,9 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
         selectArea: function(areaId) {
             $('.paper-box').css('border', '2px solid green').css('z-index', 10);
             $('#box_' + areaId).css('border', '3px solid blue').css('z-index', 20);
+
+            $('.feedback-box').css('border', '2px solid orange').css('z-index', 11);
+            $('#fb_box_' + areaId).css('border', '3px solid red').css('z-index', 21);
 
             $('.area-card').hide();
             $('#card_' + areaId).fadeIn();
@@ -434,6 +538,77 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
 
             box.append(label);
             $('#image-container').append(box);
+            this.bindVanillaJSInteractions(box);
+            return box;
+        },
+
+        createFeedbackBoxElement: function(id, num, x, y, w, h) {
+            var dd = this;
+            console.log("createFeedbackBoxElement called", {id: id, x: x, y: y, w: w, h: h});
+            var boxTitle = dd.strings.feedbackarea ? dd.strings.feedbackarea.replace('{$a}', num) : 'Feedback Area #' + num;
+            
+            // If coordinates are 0, default to bottom 30% of parent box.
+            if (parseFloat(x) == 0 && parseFloat(y) == 0 && parseFloat(w) == 0 && parseFloat(h) == 0) {
+                var parentBox = $('#box_' + id);
+                if (parentBox.length) {
+                    var px = parseFloat(parentBox[0].style.left);
+                    var py = parseFloat(parentBox[0].style.top);
+                    var pw = parseFloat(parentBox[0].style.width);
+                    var ph = parseFloat(parentBox[0].style.height);
+                    x = px;
+                    w = pw;
+                    h = ph * 0.3;
+                    y = py + ph * 0.7;
+                    console.log("Defaulting feedback box to bottom 30% of parent", {x: x, y: y, w: w, h: h});
+                }
+            }
+
+            var box = $('<div/>', {
+                id: 'fb_box_' + id,
+                'class': 'paper-box feedback-box',
+                'data-area-id': id,
+                css: {
+                    position: 'absolute',
+                    border: '2px solid orange',
+                    backgroundColor: 'rgba(255,165,0,0.2)',
+                    left: x + '%',
+                    top: y + '%',
+                    width: w + '%',
+                    height: h + '%',
+                    display: 'none',
+                    zIndex: 11
+                },
+                title: boxTitle
+            });
+
+            var label = $('<span/>', {
+                'class': 'box-label',
+                text: 'FB #' + num,
+                css: {
+                    backgroundColor: 'orange',
+                    color: 'white',
+                    padding: '2px 5px',
+                    position: 'absolute',
+                    bottom: 0,
+                    right: 0,
+                    fontSize: '10px'
+                }
+            });
+
+            box.append(label);
+            $('#image-container').append(box);
+            console.log("Feedback box appended to DOM", '#fb_box_' + id);
+
+            // Sync with initial feedback mode.
+            var card = $('#card_' + id);
+            if (card.length) {
+                var fm = card.find('.fm-radio:checked').val();
+                console.log("Initial feedback mode for area " + id + ":", fm);
+                if (fm && fm !== 'none') {
+                    box.show();
+                }
+            }
+
             this.bindVanillaJSInteractions(box);
             return box;
         },
@@ -497,7 +672,9 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                     summaryLabel.text(dd.strings.noneconfigured || 'None configured.');
                     summaryLabel.removeClass('text-success text-warning').addClass('text-secondary');
                 } else {
-                    var summaryText = (dd.strings.nconfigured || '{$a} areas configured.').replace('{$a}', configuredAreas);
+                    var summaryText = (dd.strings.nconfigured || '{$a->configured}/{$a->total} configured.')
+                        .replace('{$a->configured}', configuredAreas)
+                        .replace('{$a->total}', totalAreas);
                     summaryLabel.text(summaryText);
                     summaryLabel.removeClass('text-success text-secondary').addClass('text-warning');
                 }
@@ -510,8 +687,12 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
             $('#setup-form .area-card').each(function() {
                 var areaId = $(this).data('area-id');
                 var labelText = dd.strings.responsearea ? dd.strings.responsearea.replace('{$a}', num) : 'Response Area #' + num;
+                // Update the card header title (e.g. "Configuration for Area #5").
+                $(this).find('.card-title .area-display-num').text('#' + num);
+                // Update the first fieldset legend inside the card body.
                 $(this).find('legend').first().text(labelText);
                 $('#box_' + areaId + ' .box-label').text('#' + num);
+                $('#fb_box_' + areaId + ' .box-label').text('FB #' + num);
                 num++;
             });
             this.renderStatusIcons();

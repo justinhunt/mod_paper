@@ -558,4 +558,26 @@ class utils {
 
         return json_encode($presets);
     }
+
+    /**
+     * Returns the effective feedback box coordinates for a response area.
+     * When fb_x/y/w/h are all zero (unset), defaults to the bottom 30% of
+     * the response area — same width, positioned at 70% down from the top.
+     *
+     * @param object $area DB row from paper_response_areas
+     * @return array Associative array with keys x, y, w, h (percentages 0-100)
+     */
+    public static function get_effective_feedback_box(object $area): array {
+        $fbx = (float)($area->fb_x ?? 0);
+        $fby = (float)($area->fb_y ?? 0);
+        $fbw = (float)($area->fb_w ?? 0);
+        $fbh = (float)($area->fb_h ?? 0);
+        if ($fbx == 0.0 && $fby == 0.0 && $fbw == 0.0 && $fbh == 0.0) {
+            $fbx = (float)$area->box_x;
+            $fby = (float)$area->box_y + ((float)$area->box_h * 0.7);
+            $fbw = (float)$area->box_w;
+            $fbh = (float)$area->box_h * 0.3;
+        }
+        return ['x' => $fbx, 'y' => $fby, 'w' => $fbw, 'h' => $fbh];
+    }
 }

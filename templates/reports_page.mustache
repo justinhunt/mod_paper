@@ -1,7 +1,7 @@
 <div class="mod_paper_reports_page">
-    <div class="alert alert-info">
+    <p class="text-muted mb-3">
         {{#str}}reports_help, mod_paper{{/str}}
-    </div>
+    </p>
 
     {{#noevaluations}}
         <div class="alert alert-info text-center mt-4 mb-4">
@@ -46,9 +46,12 @@
 
     <div class="mt-3 mb-3 d-flex flex-wrap" style="gap: 10px;">
         {{#actionbuttons}}
-            <a href="{{url}}" class="{{class}}" {{#target}}target="{{target}}"{{/target}} {{#onclick}}onclick="{{onclick}}"{{/onclick}}>
-                {{text}}
-            </a>
+            {{#disabled}}
+                <button type="button" class="{{class}} disabled" disabled title="{{title}}">{{text}}</button>
+            {{/disabled}}
+            {{^disabled}}
+                <a href="{{url}}" class="{{class}}" {{#target}}target="{{target}}"{{/target}} {{#onclick}}onclick="{{onclick}}"{{/onclick}}>{{text}}</a>
+            {{/disabled}}
         {{/actionbuttons}}
     </div>
 

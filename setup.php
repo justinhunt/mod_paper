@@ -42,6 +42,11 @@ if ($_POST && isset($_POST['sesskey']) && confirm_sesskey() && empty($_FILES['te
     $by = optional_param_array('box_y', [], PARAM_FLOAT);
     $bw = optional_param_array('box_w', [], PARAM_FLOAT);
     $bh = optional_param_array('box_h', [], PARAM_FLOAT);
+
+    $fbx = optional_param_array('fb_x', [], PARAM_FLOAT);
+    $fby = optional_param_array('fb_y', [], PARAM_FLOAT);
+    $fbw = optional_param_array('fb_w', [], PARAM_FLOAT);
+    $fbh = optional_param_array('fb_h', [], PARAM_FLOAT);
     
     $submitted_ids = array_keys($questions);
     
@@ -82,6 +87,11 @@ if ($_POST && isset($_POST['sesskey']) && confirm_sesskey() && empty($_FILES['te
         $record->box_y = $by[$post_id] ?? 0;
         $record->box_w = $bw[$post_id] ?? 0;
         $record->box_h = $bh[$post_id] ?? 0;
+
+        $record->fb_x = $fbx[$post_id] ?? 0;
+        $record->fb_y = $fby[$post_id] ?? 0;
+        $record->fb_w = $fbw[$post_id] ?? 0;
+        $record->fb_h = $fbh[$post_id] ?? 0;
         
         // If the ID contains 'new', it's a dynamically added box
         if (strpos((string)$post_id, 'new') !== false) {
@@ -173,6 +183,11 @@ if (isset($_FILES['templateimage']) && $_FILES['templateimage']['error'] === UPL
                 $record->box_w = $area->w ?? 0;
                 $record->box_h = $area->h ?? 0;
             }
+            // Default feedback area to the bottom 30% of the response area
+            $record->fb_x = $record->box_x;
+            $record->fb_y = $record->box_y + ($record->box_h * 0.7);
+            $record->fb_w = $record->box_w;
+            $record->fb_h = $record->box_h * 0.3;
             $DB->insert_record('paper_response_areas', $record);
         }
         redirect(new moodle_url('/mod/paper/setup.php', ['id' => $cm->id]));
@@ -212,6 +227,10 @@ if (!empty($areas)) {
             'box_y' => (float)$area->box_y,
             'box_w' => (float)$area->box_w,
             'box_h' => (float)$area->box_h,
+            'fb_x' => (float)$area->fb_x,
+            'fb_y' => (float)$area->fb_y,
+            'fb_w' => (float)$area->fb_w,
+            'fb_h' => (float)$area->fb_h,
             'isnamefield' => $area->isnamefield,
             'namefield_standard' => ($area->isnamefield == 0),
             'namefield_fullname' => ($area->isnamefield == 1),

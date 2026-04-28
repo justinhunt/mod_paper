@@ -1,4 +1,19 @@
 <?php
+// This file is part of Moodle - https://moodle.org/
+//
+// Moodle is free software: you can redistribute it and/or modify
+// it under the terms of the GNU General Public License as published by
+// the Free Software Foundation, either version 3 of the License, or
+// (at your option) any later version.
+//
+// Moodle is distributed in the hope that it will be useful,
+// but WITHOUT ANY WARRANTY; without even the implied warranty of
+// MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+// GNU General Public License for more details.
+//
+// You should have received a copy of the GNU General Public License
+// along with Moodle.  If not, see <https://www.gnu.org/licenses/>.
+
 /**
  * Admin settings for mod_paper
  *
@@ -49,15 +64,15 @@ if ($ADMIN->fulltree) {
 
     $settings->add(new admin_setting_configtext('mod_paper/gradingprompt_1_name',
         get_string('gradingprompt_name', 'mod_paper', 1),
-        '', ''));
+        '', 'Standard'));
     $settings->add(new admin_setting_configtextarea('mod_paper/gradingprompt_1_content',
         get_string('gradingprompt_content', 'mod_paper', 1),
-        '', ''));
+        '', 'Deduct 1 point for each grammatical or spelling mistake or inappropriate expression.'));
 
     $settings->add(new admin_setting_configtext('mod_paper/gradingprompt_2_name',
         get_string('gradingprompt_name', 'mod_paper', 2),
-        '', ''));
+        '', 'Comprehensive'));
     $settings->add(new admin_setting_configtextarea('mod_paper/gradingprompt_2_content',
         get_string('gradingprompt_content', 'mod_paper', 2),
-        '', ''));
+        '', 'For each error in grammar or spelling, deduct 1 point.  For inappropriate expression, deduct 2 points.  For incoherence, deduct 3 points.  For irrelevance, deduct 4 points.  For lack of argumentation or poor reasoning, deduct 5 points.  For inappropriate or insufficient documentation, deduct 1 point.  For formatting or presentation issues, deduct 1 point.  '));
 }

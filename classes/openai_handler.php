@@ -168,7 +168,16 @@ class openai_handler {
         $prompt .= "   - 'incorrect': Deduct point for each grammar/spelling mistake. Starting from " . $area->maxgrade . ".\n";
         $prompt .= "   - 'overall': Use the 'Grading Instructions' provided above.\n\n";
 
-        $prompt .= "3. Grammar: If 'Grammar Corrections' is enabled, provide a grammatically corrected version of the text. Do not use markdown like bold or strikethrough, just plain corrected text.\n\n";
+        $prompt .= "3. Grammar: Provide the 'correctedtext' field as follows:\n";
+        $prompt .= "   - If 'Grammar Corrections' is 'no': return the student's original text verbatim. Do not alter it.\n";
+        $prompt .= "   - If 'Grammar Corrections' is 'major': correct only significant grammar and spelling errors.\n";
+        $prompt .= "     IGNORE trivial errors such as: wrong articles (a/an/the), minor preposition choices, and sentences\n";
+        $prompt .= "     that are grammatically correct but sound slightly unnatural. Focus only on errors that clearly\n";
+        $prompt .= "     impede meaning or demonstrate a significant grammatical mistake.\n";
+        $prompt .= "   - If 'Grammar Corrections' is 'all': correct every grammar and spelling error, including articles,\n";
+        $prompt .= "     prepositions, unnatural phrasing, and any other deviation from standard correct usage.\n";
+        $prompt .= "   In all cases: plain text only (no markdown), and 'correctedtext' must NEVER be empty —\n";
+        $prompt .= "   always return either the corrected text or the original text verbatim.\n\n";
 
         $prompt .= "4. Feedback: Provide feedback based on the 'Feedback Mode':\n";
         $prompt .= "   - 'none': DO NOT provide any feedback. Return an empty string.\n";
@@ -191,7 +200,7 @@ class openai_handler {
 
         $prompt .= "### Output Format\n";
         $prompt .= "Return ONLY a valid JSON object where keys are the item IDs and values are objects containing:\n";
-        $prompt .= "- 'correctedtext': string (if grammar corrections enabled)\n";
+        $prompt .= "- 'correctedtext': string — ALWAYS required. Return the grammatically corrected student text if grammar corrections are enabled, OR return the student's original text verbatim if grammar corrections are 'no'. Never return an empty string.\n";
         $prompt .= "- 'status': 'correct' | 'partially correct' | 'incorrect'\n";
         $prompt .= "- 'grade': number (0 to " . $area->maxgrade . ")\n";
         $prompt .= "- 'feedback': string (in " . $feedbacklanguage . ")\n";

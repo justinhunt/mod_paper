@@ -143,5 +143,24 @@ function xmldb_paper_upgrade($oldversion) {
         upgrade_mod_savepoint(true, 2024042704, 'paper');
     }
 
+    if ($oldversion < 2024042705) {
+        $table = new xmldb_table('paper_response_areas');
+
+        $fields = [
+            'fb_x' => new xmldb_field('fb_x', XMLDB_TYPE_NUMBER, '10, 2', null, XMLDB_NOTNULL, null, '0', 'box_h'),
+            'fb_y' => new xmldb_field('fb_y', XMLDB_TYPE_NUMBER, '10, 2', null, XMLDB_NOTNULL, null, '0', 'fb_x'),
+            'fb_w' => new xmldb_field('fb_w', XMLDB_TYPE_NUMBER, '10, 2', null, XMLDB_NOTNULL, null, '0', 'fb_y'),
+            'fb_h' => new xmldb_field('fb_h', XMLDB_TYPE_NUMBER, '10, 2', null, XMLDB_NOTNULL, null, '0', 'fb_w')
+        ];
+
+        foreach ($fields as $name => $field) {
+            if (!$dbman->field_exists($table, $field)) {
+                $dbman->add_field($table, $field);
+            }
+        }
+
+        upgrade_mod_savepoint(true, 2024042705, 'paper');
+    }
+
     return true;
 }

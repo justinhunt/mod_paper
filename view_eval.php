@@ -112,7 +112,10 @@ if ($file) {
         $targetfontcss = \mod_paper\utils::get_css_font_family($paper->targetlanguagefont ?? 'courier');
         $valign = $area->isnamefield ? 'justify-content: flex-end;' : 'justify-content: flex-start;';
         $style = sprintf(
-            'position: absolute; left: %s%%; top: %s%%; width: %s%%; height: %s%%; outline: 2px solid blue; background-color: rgba(0, 0, 255, 0.1); color: black; font-weight: normal; padding: 4px; box-sizing: border-box; overflow: visible; font-family: %s; cursor: pointer; display: flex; flex-direction: column; %s',
+            'position: absolute; left: %s%%; top: %s%%; width: %s%%; height: %s%%; ' .
+            'outline: 2px solid blue; background-color: rgba(0, 0, 255, 0.1); color: black; ' .
+            'font-weight: normal; padding: 4px; box-sizing: border-box; overflow: visible; ' .
+            'font-family: %s; cursor: pointer; display: flex; flex-direction: column; %s',
             $area->box_x, $area->box_y, $area->box_w, $area->box_h, $targetfontcss, $valign
         );
 
@@ -120,8 +123,16 @@ if ($file) {
         $feedbackstyle = null;
         if (!empty($feedback) && !$area->isnamefield && ($area->feedbackmode ?? 'none') !== 'none') {
             $feedbackfontcss = \mod_paper\utils::get_css_font_family($paper->feedbacklanguagefont ?? 'freesans');
-            $feedbackhtml = get_string('feedbacklabel', 'mod_paper', htmlspecialchars($feedback));
-            $feedbackstyle = 'position: absolute; bottom: 4px; left: 4px; right: 4px; font-family: ' . $feedbackfontcss . '; font-size: 0.7em; font-weight: normal; color: #666; background: rgba(255,255,255,0.8); line-height: 1.2; max-height: 30%; overflow: hidden;';
+            $feedbackhtml = htmlspecialchars(html_entity_decode($feedback, ENT_QUOTES | ENT_HTML5, 'UTF-8'));
+
+            $fb = \mod_paper\utils::get_effective_feedback_box($area);
+            $feedbackstyle = sprintf(
+                'position: absolute; left: %s%%; top: %s%%; width: %s%%; height: %s%%; ' .
+                'font-family: %s; font-size: 1em; font-weight: normal; color: black; ' .
+                'background-color: rgba(0, 0, 255, 0.05); padding: 4px; ' .
+                'box-sizing: border-box; line-height: 1.4; overflow: visible; z-index: 25;',
+                $fb['x'], $fb['y'], $fb['w'], $fb['h'], $feedbackfontcss
+            );
         }
 
         if ($area->isnamefield == 3) {
@@ -137,7 +148,8 @@ if ($file) {
         }
 
         $gradestyle = null;
-        if ($grade !== null && !$area->isnamefield) {
+        $showgrade = ($grade !== null && !$area->isnamefield && ($area->gradingmode ?? 'none') !== 'none');
+        if ($showgrade) {
             $gradestyle = 'position: absolute; top: -20px; right: -25px; font-weight: bold; font-size: 2em; color: green; z-index: 30; background: white; border: 1px solid green; padding: 2px 6px; border-radius: 4px;';
         }
 
@@ -154,7 +166,7 @@ if ($file) {
             'displayhtml' => $displayhtml,
             'feedbackhtml' => $feedbackhtml,
             'feedbackstyle' => $feedbackstyle,
-            'gradehtml' => ($grade !== null && !$area->isnamefield),
+            'gradehtml' => ($showgrade),
             'gradestyle' => $gradestyle,
         ];
     }

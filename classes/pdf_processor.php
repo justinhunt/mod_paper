@@ -197,14 +197,14 @@ class pdf_processor {
                         $html = htmlspecialchars($displaytext);
                     }
                     
-                    // Select font for student response (OCR/Corrected text)
+                    // Select font for student response (OCR/Corrected text).
                     $studentfont = $paper->targetlanguagefont ?? 'courier';
                     $pdf->SetFont($studentfont, '', 12);
                     
                     if ($area->isnamefield) {
-                        // Manual vertical alignment since TCPDF doesn't support it for HTML
+                        // Manual vertical alignment since TCPDF doesn't support it for HTML.
                         $pdf->startTransaction();
-                        // Use 0,0 to avoid page break issues during measurement
+                        // Use 0,0 to avoid page break issues during measurement.
                         $pdf->MultiCell($w_mm, 0, trim($html), 0, 'L', false, 1, 0, 0, true, 0, true, true, 0, 'T', false);
                         $content_h = $pdf->GetY();
                         $pdf = $pdf->rollbackTransaction(true);
@@ -214,26 +214,33 @@ class pdf_processor {
                     } else {
                         $pdf->writeHTMLCell($w_mm, $h_mm, $x_mm, $y_mm, trim($html), 0, 0, false, true, 'L', true);
                     }
-
-                    if (!empty($feedback) && !$area->isnamefield && ($area->feedbackmode ?? 'none') !== 'none') {
-                        $feedbackfont = $paper->feedbacklanguagefont ?? 'freesans';
-                        $pdf->SetFont($feedbackfont, '', 16);
-                        $pdf->SetTextColor(85, 85, 85);
-                        $feedback_text = 'feedback: ' . $feedback;
-                        // Position feedback at the bottom of the box area (approx 12mm height for 2 rows of 16pt)
-                        $pdf->MultiCell($w_mm - 2, 12, $feedback_text, 0, 'L', false, 1, $x_mm + 1, $y_mm + $h_mm - 13, true, 0, false, true, 12, 'B', true);
-                        $pdf->SetTextColor(0, 0, 0);
-                    }
                 }
 
-                // Add item grade to the top right of the area (shifted outside)
-                if ($grade !== null && !$area->isnamefield) {
+                // Render feedback in its dedicated feedback area (independent of display text).
+                if (!empty($feedback) && !$area->isnamefield && ($area->feedbackmode ?? 'none') !== 'none') {
+                    $feedbackfont = $paper->feedbacklanguagefont ?? 'freesans';
+                    $pdf->SetFont($feedbackfont, '', 11);
+                    $pdf->SetTextColor(0, 0, 0);
+
+                    $fb = \mod_paper\utils::get_effective_feedback_box($area);
+                    $fbx_mm = ($fb['x'] / 100) * $page_w;
+                    $fby_mm = ($fb['y'] / 100) * $page_h;
+                    $fbw_mm = ($fb['w'] / 100) * $page_w;
+                    $fbh_mm = ($fb['h'] / 100) * $page_h;
+
+                    $pdf->writeHTMLCell($fbw_mm, $fbh_mm, $fbx_mm, $fby_mm,
+                        htmlspecialchars(html_entity_decode($feedback, ENT_QUOTES | ENT_HTML5, 'UTF-8')), 0, 0, false, true, 'L', true);
+                    $pdf->SetTextColor(0, 0, 0);
+                }
+
+                // Add item grade to the top right of the area (shifted outside).
+                if ($grade !== null && !$area->isnamefield && ($area->gradingmode ?? 'none') !== 'none') {
                     $pdf->SetFont('freesans', 'B', 20);
-                    $pdf->SetTextColor(0, 128, 0); // Green
+                    $pdf->SetTextColor(0, 128, 0); // Green.
                     $grade_text = (round($grade, 2) + 0);
-                    // Position 2mm right and 5mm above the top-right corner of the box
+                    // Position 2mm right and 5mm above the top-right corner of the box.
                     $pdf->Text($x_mm + $w_mm + 2, $y_mm - 5, $grade_text);
-                    // Reset font/color for next response
+                    // Reset font/color for next response.
                     $pdf->SetFont('freesans', '', 14);
                     $pdf->SetTextColor(0, 0, 0);
                 }

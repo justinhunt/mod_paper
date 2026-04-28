@@ -39,6 +39,10 @@
         <FIELD NAME="box_y" TYPE="number" LENGTH="10" NOTNULL="true" DECIMALS="2" SEQUENCE="false"/>
         <FIELD NAME="box_w" TYPE="number" LENGTH="10" NOTNULL="true" DECIMALS="2" SEQUENCE="false"/>
         <FIELD NAME="box_h" TYPE="number" LENGTH="10" NOTNULL="true" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="fb_x" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="fb_y" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="fb_w" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
+        <FIELD NAME="fb_h" TYPE="number" LENGTH="10" NOTNULL="true" DEFAULT="0" DECIMALS="2" SEQUENCE="false"/>
         <FIELD NAME="question" TYPE="text" LENGTH="big" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="correctanswer" TYPE="text" LENGTH="big" NOTNULL="false" SEQUENCE="false"/>
         <FIELD NAME="correctanswermode" TYPE="char" LENGTH="50" NOTNULL="true" DEFAULT="none" SEQUENCE="false" COMMENT="none, exactly, relevant, samemeaning"/>
