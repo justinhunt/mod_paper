@@ -205,6 +205,8 @@ $contextdata = [
     'enablemoodleusername' => in_array($paper->namefieldrole, ['1', 1, 'username'], true),
     'preset_options' => \mod_paper\utils::get_grading_preset_options_list(),
     'preset_contents_json' => \mod_paper\utils::get_grading_presets_json(),
+    'feedback_preset_options' => \mod_paper\utils::get_feedback_preset_options_list(),
+    'feedback_preset_contents_json' => \mod_paper\utils::get_feedback_presets_json(),
     'manage_presets_url' => new moodle_url('/mod/paper/presets.php', ['id' => $cm->id])->out(false),
     'responseareas' => []
 ];

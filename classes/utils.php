@@ -560,6 +560,74 @@ class utils {
     }
 
     /**
+     * Get feedback preset options for select lists.
+     *
+     * @return array
+     */
+    public static function get_feedback_preset_options() {
+        global $DB, $USER;
+
+        $options = [0 => get_string('selectfeedbackpreset', 'mod_paper')];
+
+        // 1. Site-wide presets.
+        for ($i = 1; $i <= 2; $i++) {
+            $name = get_config('mod_paper', 'feedbackprompt_' . $i . '_name');
+            if (!empty($name)) {
+                $options['site_' . $i] = $name . ' (Site)';
+            }
+        }
+
+        // 2. User-specific presets.
+        $userpresets = $DB->get_records('paper_feedback_presets', ['userid' => $USER->id], 'name ASC');
+        foreach ($userpresets as $preset) {
+            $options['user_' . $preset->id] = $preset->name;
+        }
+
+        return $options;
+    }
+
+    /**
+     * Get feedback preset options as a list of objects for Mustache.
+     *
+     * @return array
+     */
+    public static function get_feedback_preset_options_list() {
+        $options = self::get_feedback_preset_options();
+        $list = [];
+        foreach ($options as $key => $value) {
+            $list[] = ['key' => $key, 'value' => $value];
+        }
+        return $list;
+    }
+
+    /**
+     * Get all feedback presets as a JSON object for Javascript.
+     *
+     * @return string JSON string
+     */
+    public static function get_feedback_presets_json() {
+        global $DB, $USER;
+
+        $presets = [];
+
+        // 1. Site-wide presets.
+        for ($i = 1; $i <= 2; $i++) {
+            $content = get_config('mod_paper', 'feedbackprompt_' . $i . '_content');
+            if (!empty($content)) {
+                $presets['site_' . $i] = $content;
+            }
+        }
+
+        // 2. User-specific presets.
+        $userpresets = $DB->get_records('paper_feedback_presets', ['userid' => $USER->id]);
+        foreach ($userpresets as $preset) {
+            $presets['user_' . $preset->id] = $preset->content;
+        }
+
+        return json_encode($presets);
+    }
+
+    /**
      * Returns the effective feedback box coordinates for a response area.
      * When fb_x/y/w/h are all zero (unset), defaults to the bottom 30% of
      * the response area — same width, positioned at 70% down from the top.

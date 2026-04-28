@@ -172,13 +172,25 @@ define(['jquery', 'core/log', 'core/str'], function($, log, Str) {
                 dd.updateLabels();
             });
 
-            // Handle preset selection.
+            // Handle grading preset selection.
             var presetContents = JSON.parse($('#preset-contents-json').val() || '{}');
             $('#setup-form').on('change', '.preset-selector', function() {
                 var areaId = $(this).data('area-id');
                 var presetId = $(this).val();
                 if (presetId && presetContents[presetId]) {
                     $('#gradeinstructions_' + areaId).val(presetContents[presetId]);
+                }
+                // Reset selector so it can be used again for the same preset if needed.
+                $(this).val('0');
+            });
+
+            // Handle feedback preset selection.
+            var feedbackPresetContents = JSON.parse($('#feedback-preset-contents-json').val() || '{}');
+            $('#setup-form').on('change', '.feedback-preset-selector', function() {
+                var areaId = $(this).data('area-id');
+                var presetId = $(this).val();
+                if (presetId && feedbackPresetContents[presetId]) {
+                    $('#feedbackinstructions_' + areaId).val(feedbackPresetContents[presetId]);
                 }
                 // Reset selector so it can be used again for the same preset if needed.
                 $(this).val('0');

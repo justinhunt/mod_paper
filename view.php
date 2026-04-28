@@ -34,6 +34,8 @@ $templatecontext = [
     'setupurl' => (new moodle_url('/mod/paper/setup.php', ['id' => $cm->id]))->out(false),
     'processurl' => (new moodle_url('/mod/paper/process_submissions.php', ['id' => $cm->id]))->out(false),
     'reportsurl' => (new moodle_url('/mod/paper/reports.php', ['id' => $cm->id]))->out(false),
+    'gradingpresetsurl' => (new moodle_url('/mod/paper/presets.php', ['id' => $cm->id, 'type' => 'grading']))->out(false),
+    'feedbackpresetsurl' => (new moodle_url('/mod/paper/presets.php', ['id' => $cm->id, 'type' => 'feedback']))->out(false),
     'presetsurl' => (new moodle_url('/mod/paper/presets.php', ['id' => $cm->id]))->out(false),
     'evalcount' => $DB->count_records('paper_evaluations', ['paperid' => $paper->id]),
 ];

@@ -75,4 +75,21 @@ if ($ADMIN->fulltree) {
     $settings->add(new admin_setting_configtextarea('mod_paper/gradingprompt_2_content',
         get_string('gradingprompt_content', 'mod_paper', 2),
         '', 'For each error in grammar or spelling, deduct 1 point.  For inappropriate expression, deduct 2 points.  For incoherence, deduct 3 points.  For irrelevance, deduct 4 points.  For lack of argumentation or poor reasoning, deduct 5 points.  For inappropriate or insufficient documentation, deduct 1 point.  For formatting or presentation issues, deduct 1 point.  '));
+
+    $settings->add(new admin_setting_heading('mod_paper/feedbackpresets_heading',
+        get_string('feedbackpresets', 'mod_paper'), ''));
+
+    $settings->add(new admin_setting_configtext('mod_paper/feedbackprompt_1_name',
+        get_string('feedbackprompt_name', 'mod_paper', 1),
+        '', 'Standard'));
+    $settings->add(new admin_setting_configtextarea('mod_paper/feedbackprompt_1_content',
+        get_string('feedbackprompt_content', 'mod_paper', 1),
+        '', 'For full marks say "Excellent", for partial marks say "Very good", for a score of 0 say "Incorrect"'));
+
+    $settings->add(new admin_setting_configtext('mod_paper/feedbackprompt_2_name',
+        get_string('feedbackprompt_name', 'mod_paper', 2),
+        '', ''));
+    $settings->add(new admin_setting_configtextarea('mod_paper/feedbackprompt_2_content',
+        get_string('feedbackprompt_content', 'mod_paper', 2),
+        '', ''));
 }

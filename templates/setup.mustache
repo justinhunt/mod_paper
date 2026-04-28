@@ -36,6 +36,7 @@
             </div>
             <input type="hidden" id="responseareas-json" value="{{responseareas_json}}">
             <input type="hidden" id="preset-contents-json" value="{{preset_contents_json}}">
+            <input type="hidden" id="feedback-preset-contents-json" value="{{feedback_preset_contents_json}}">
             <a href="{{actionurl}}&amp;reset=1" class="btn btn-warning mt-3">{{#str}}uploadnewtemplate, mod_paper{{/str}}</a>
         </div>
         <div class="col-md-6">
@@ -149,7 +150,16 @@
                                     </div>
                                 </div>
                                 <div class="form-group mt-3 feedback-instructions-wrapper" id="feedback_instructions_wrapper_{{id}}" {{^feedbackmode_custom}}style="display: none;"{{/feedbackmode_custom}}>
-                                    <label for="feedbackinstructions_{{id}}">{{#str}}feedbackinstructions, mod_paper{{/str}}</label>
+                                    <div class="d-flex justify-content-between align-items-center mb-1">
+                                        <label class="mb-0" for="feedbackinstructions_{{id}}">{{#str}}feedbackinstructions, mod_paper{{/str}}</label>
+                                        <div class="d-flex align-items-center">
+                                            <select class="form-control form-control-sm feedback-preset-selector mr-2" data-area-id="{{id}}" style="width: auto;">
+                                                {{#feedback_preset_options}}
+                                                <option value="{{key}}">{{value}}</option>
+                                                {{/feedback_preset_options}}
+                                            </select>
+                                        </div>
+                                    </div>
                                     <p class="text-muted small mb-1">{{#str}}feedbackinstructions_help, mod_paper{{/str}}</p>
                                     <textarea class="form-control" id="feedbackinstructions_{{id}}" name="feedbackinstructions[{{id}}]">{{feedbackinstructions}}</textarea>
                                 </div>
