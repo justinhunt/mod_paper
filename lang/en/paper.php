@@ -76,9 +76,9 @@ $string['feedbackprompt_name'] = 'Feedback Preset {$a} Name';
 $string['feedbackprompt_content'] = 'Feedback Preset {$a} Content';
 $string['managegradingpresets'] = 'Manage Grading Presets';
 $string['managefeedbackpresets'] = 'Manage Feedback Presets';
-$string['managegradingpresetsinstructions'] = 'Set custom prompts that will be used when AI evaluates the student submissions for grading.';
-$string['managefeedbackpresetsinstructions'] = 'Set custom prompts that will be used when AI evaluates the student submissions for feedback.';
-$string['managepresets'] = 'Manage Grading Presets';
+$string['managegradingpresetsinstructions'] = 'Set custom prompts that can be used when AI evaluates the student submissions for grading.';
+$string['managefeedbackpresetsinstructions'] = 'Set custom prompts that can be used when AI evaluates the student submissions for feedback.';
+$string['managepresets'] = 'Manage Presets';
 
 $string['addpreset'] = 'Add Preset';
 $string['editpreset'] = 'Edit Preset';
